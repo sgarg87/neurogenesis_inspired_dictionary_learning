@@ -1,4 +1,9 @@
 function [D,err,correl_all] = DL(data,D0,nonzeros_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,D_update_method)
+% 
+% sahil: D0 is initialization of the dictionary
+% sahil: D_update_method parameter means that this is a general method for any of the dictionary update methods expect the neurogenesis.
+% sahil: what methods are implemented inhere. We should have assertions to not allow code running for any unimplemented method.
+% 
 % learn a dictionary D, and a  sparse code C, for data
 
 % parameters:
@@ -11,26 +16,39 @@ function [D,err,correl_all] = DL(data,D0,nonzeros_C,lambda_D,mu,eta,epsilon,T,ne
 % new_elements - the  number of new dictionary elements to generate per each sample (if 0, no neurogen occuring)
 % data_type - 'Gaussian', or 'Bernoulli', or another exp-family
 
-
+% sahil: n is dimension of dictionary vectors, k is number of original dictionary vectors
 n = size(D0,1);
 k = size(D0,2);
 
+% sahil: starting with initialization
 D = D0;
+% sahil: coefficients vectors empty, hmm
 C = [];
 
+% sahil: In Mairal method, learning on previous data is kept in terms of A and B.
+% sahil: in the Mairal method, A and B updated in each iteration as follow.
+% sahil: At <- At-1 + alpha_t alpha_t^T
+% sahil: here, alpha_t (of size n I guess) are the sparse weights learned for the dictionary vectors (Corresponding to C in this code, I guess).
+% sahil: Bt <- Bt-1 + x_t alpha_t^T
+% sahil: here x_t (of n dimensions) should be the data processed in iteration t.
+% reset the ?past? information
 A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
 
+% sahil: it seems that each column in "data" is a single data for processing.
 [n1,n2]=size(data);
 batch_size = 20;
 t_start=1;
 t_end=batch_size;
 t = 0; % iteration
 
+% sahil: ok
 if (find(mean(data) == 0))
     display 'all zero column in data';
     pause;
 end
 
+% sahil: this is the primary loop where all the processing is done.
+% sahil: in each iteration, a batch of data (x) is obtained.
 while t_end <= T  % up to T samples
 %     display 'iter'
       t = t+1;
@@ -40,7 +58,11 @@ while t_end <= T  % up to T samples
 
       t_start=t_end+1;
       t_end = t_end + batch_size;
-
+    
+    %sahil: this is confusing. so, we initialize D in each iteration rather
+    %than the warm restarts as in Mairal ?? Isn't D already initialize
+    %outside the loop. That should be enough ?
+    % sahil: else condition ? I guess that is taken care of later.    
 	% 1. neurogenesis step
     if  new_elements < 0   % just use the initial dictionary
 		D = D0;
@@ -48,6 +70,8 @@ while t_end <= T  % up to T samples
     % changed on 11/9
      % evaluate the current dictionary before adding random elements 
     
+    % sahil: I guess, learning the alphas (C) herein.
+    % sahil: code is the learned alphas   
     [code,err(t,:),correl] = sparse_coding(x,D,nonzeros_C,data_type);
     correl_S(t,:) = correl(1,:);
     correl_P(t,:) = correl(2,:);
@@ -89,8 +113,10 @@ while t_end <= T  % up to T samples
 	%    currently, implemented as 'truncated' stochastic gradient, or proximal method with group sparsity
     
     %%% just in case, giving all previous data and current encoding to updateD
+    % sahil: from efficiency perspective, we can avoid computing it if we don't really use it in updateD() function.
     [code_history] = sparse_coding(data_history,D,nonzeros_C,data_type);
 
+    % sahil, why update of A and B also ?    
 	[D,A,B] = updateD(D,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method, A,B, data_history,code_history) ;
    
     [nzD,ind] = find(sum(abs(D)));

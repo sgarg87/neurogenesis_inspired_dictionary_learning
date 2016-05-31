@@ -78,8 +78,9 @@ n = size(X,1);
 % learn a dictionary using ``standard way'' on the first dataset
 % this would correspond to an 'adult' brain (dictionary <=> link weights)
 
+% sahil: initializing the dictionary here, and normalizing (to see what norm and which dimension, I guess first dimension)
 D_init = normalize(rand(n,k));
-
+% sahil: not sure if dictionary vectors are sparse here or or the number of vectors sparse in general
 nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim
  
 

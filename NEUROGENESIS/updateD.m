@@ -13,6 +13,8 @@ n = size(D_old,1);
 k = size(D_old,2);
 D = D_old;
     
+% sahil: currently understanding working of the Mairal method.
+% 
 switch D_update_method
     case 'SG' %stochastic gradient with thresholding, i.e. proximal method
 
@@ -94,6 +96,8 @@ switch D_update_method
                 %%D = normalize(D);
         end
     case 'Mairal'
+        % sahil: this is the standard implementation of the pseudo code in Algo 2 in the paper Mairal et al.
+        % challenge is understanding why this algo should work.        
         converged = 0;  
         while ~converged
             Dprev = D;
@@ -110,6 +114,8 @@ switch D_update_method
             end 
         end
     case 'GroupMairal'
+        % sahil: this is the implementation of equation (11) in the group sparsity paper.
+        % sahil: important is how we come up with formulation exactly.
         converged = 0;  
         while ~converged
             Dprev = D;
