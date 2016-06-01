@@ -48,7 +48,7 @@ if is_patches
     [train_data, test_data, n] = lena_patches(T);
 else
     % or real images itself (Sahil)
-    [train_data, test_data, data0, test_data0, n] = cifar_images();
+    [train_data, test_data, data0, test_data0, n] = cifar_images(true);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
