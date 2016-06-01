@@ -18,9 +18,7 @@ noise = params.noise;
 True_nonzero_frac = params.True_nonzero_frac;
 nonzero_frac = params.nonzero_frac;
 test_or_train = params.test_or_train; 
-
-
-
+% 
 nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim
  
 % columns of data: input signals (samples)
@@ -43,35 +41,15 @@ nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fracti
  %%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
- %real images (patches)
-
-I=double(imread('spams-matlab/data/boat.png'))/255;
-% extract 8 x 8 patches or 16x 16
-X=im2col(I,[16 16],'sliding');
-X=X-repmat(mean(X),[size(X,1) 1]);
-X=X ./ repmat(sqrt(sum(X.^2)),[size(X,1) 1]);
-% s - starting point for taking patches
-s = floor(size(X,2)/2);
-
-data0=X(:,s:s+T);   % this will be 'nonstationary' regime, i.e. when testing on patches from new image, 
-                  % different from training and test image
-                  
-test_data0 = X(:,s+T+100:s+2*T+100);
- 
-
-I=double(imread('spams-matlab/data/lena.png'))/255;
-% extract 8 x 8 patches
-X=im2col(I,[16 16],'sliding');
-X=X-repmat(mean(X),[size(X,1) 1]);
-X=X ./ repmat(sqrt(sum(X.^2)),[size(X,1) 1]);
-
-% s - starting point for taking patches
-s = floor(size(X,2)/2);
-train_data=X(:,s:s+T); %floor(size(X,2)/2));
-
-test_data=X(:,s+T+100:s+2*T+100); %floor(size(X,2)/2):end);
-n = size(X,1);
-
+is_patches = false;
+if is_patches
+     %real images (patches)
+    [data0, test_data0] = boat_patches(T);
+    [train_data, test_data, n] = lena_patches(T);
+else
+    % or real images itself (Sahil)
+    [train_data, test_data, data0, test_data0, n] = cifar_images();
+end
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -89,12 +67,13 @@ nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fracti
 %legend('random-D','neurogenesis','fixed-size-SG','fixed-size-Mairal','location','SouthEast'); 
 
 % random-D: just use the D_init 
+% sahil: D_update_method value doesn't seem to be random in the scripts
+% main_batch and main_online.
 [D0,err00,correl00] = DL(train_data,D_init,nonzero_C,0,mu,eta,epsilon,T,-1,data_type,D_update_method);
 
 %plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55);
 
-%neurogenesis - with GroupMairal
- 
+%neurogenesis - with GroupMairal 
 %[D1,err11,correl11] =  DL_neurogen(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
 [D1,err11,correl11] =  DL(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
  
@@ -105,11 +84,12 @@ nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fracti
 
 
 % group-sparse coding (Bengio et al 2009)
+% sahil: no new dictionary elements but deleting existing elements
 [D3,err33,correl33] = DL(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal');
 
 %%  TO DEBUG: group Mairal with lambda_D = 0 does not seem to work properly
 
-%% fixed-size-SG  
+%% fixed-size-SG
 [D4,err44,correl44] = DL(train_data,D_init,nonzero_C,0,mu,eta,epsilon,T,0,data_type,'SG');  
 
 

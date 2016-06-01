@@ -35,7 +35,7 @@ C = [];
 A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
 
 % sahil: it seems that each column in "data" is a single data for processing.
-[n1,n2]=size(data);
+[n1, n2]=size(data);
 batch_size = 20;
 t_start=1;
 t_end=batch_size;
@@ -46,6 +46,7 @@ if (find(mean(data) == 0))
     display 'all zero column in data';
     pause;
 end
+
 
 % sahil: this is the primary loop where all the processing is done.
 % sahil: in each iteration, a batch of data (x) is obtained.
@@ -68,16 +69,19 @@ while t_end <= T  % up to T samples
 		D = D0;
     end
     % changed on 11/9
-     % evaluate the current dictionary before adding random elements 
+     % evaluate the current dictionary before adding random elements
     
     % sahil: I guess, learning the alphas (C) herein.
     % sahil: code is the learned alphas   
+    % sahil: seems that we only need evaluate function, not the relearning pf alphas again. 
+    % sahil: either we should keep this or the ones in the end of the loop    
     [code,err(t,:),correl] = sparse_coding(x,D,nonzeros_C,data_type);
     correl_S(t,:) = correl(1,:);
     correl_P(t,:) = correl(2,:);
     
-    pre_err = err; pre_correl = correl; 
-    pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
+    %sahil commented the two lines belo as it seems that it is not being used.     
+%     pre_err = err; pre_correl = correl; 
+%     pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
     
     
         
@@ -87,7 +91,7 @@ while t_end <= T  % up to T samples
  
 
     % neurogen version  
-      if  new_elements > 0  % include new dictionary columns
+    if  new_elements > 0  % include new dictionary columns
 		D = [D normalize(rand(n,new_elements))]; 
         B = [B zeros(n,new_elements)];
         A = [A zeros(k,new_elements)];  
@@ -97,7 +101,6 @@ while t_end <= T  % up to T samples
 
 	% 2. sparse coding step AFTER adding random elements,to use it in dict update
     %   for each element in the data batch
-
       [code] = sparse_coding(x,D,nonzeros_C,data_type);
 
      % matrices used by Mairal's dictionary update method
@@ -114,7 +117,11 @@ while t_end <= T  % up to T samples
     
     %%% just in case, giving all previous data and current encoding to updateD
     % sahil: from efficiency perspective, we can avoid computing it if we don't really use it in updateD() function.
-    [code_history] = sparse_coding(data_history,D,nonzeros_C,data_type);
+    % sahil: checked that we don't really use the code_history. so, for now, should we comment the code below.    
+%     sahil commented the line below and instead initilizing code_history
+%     to empty.
+%     [code_history] = sparse_coding(data_history,D,nonzeros_C,data_type);
+    code_history = [];
 
     % sahil, why update of A and B also ?    
 	[D,A,B] = updateD(D,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method, A,B, data_history,code_history) ;
@@ -131,10 +138,10 @@ while t_end <= T  % up to T samples
             k = length(ind);
     end
     
-    [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzeros_C,data_type);
-    
-    post_correl_S(t,:) = post_correl(1,:);
-    post_correl_P(t,:) = post_correl(2,:);
+    % sahil: seems that this code is not really required. so, commenting it.
+%     [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzeros_C,data_type);    
+%     post_correl_S(t,:) = post_correl(1,:);
+%     post_correl_P(t,:) = post_correl(2,:);
     
 end
 

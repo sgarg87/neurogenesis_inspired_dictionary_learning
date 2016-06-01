@@ -12,7 +12,8 @@
 % clear all;
 % close all;
 
-addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
+% addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
+addpath './ElasticNet';
 
 %n = 64; % number of inputs (simulated or real 8x8 patches)
 n=256;% 16x16 patches

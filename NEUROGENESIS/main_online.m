@@ -12,7 +12,8 @@
 % clear all;
 % close all;
 
-addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
+% addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
+addpath './ElasticNet';
 
 %n = 64; % number of inputs (simulated or real 8x8 patches)
 n=256;% 16x16 patches
@@ -44,6 +45,7 @@ for tt=3:3
         otherwise
     end
     
+% sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
 for T =  100 %300]
     Ti = Ti + 1;
     k_array = [25 50 100 150 ]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);

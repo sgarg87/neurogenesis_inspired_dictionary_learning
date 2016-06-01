@@ -1,4 +1,4 @@
-function [C,err,correl] = sparse_coding(x,D,nonzeros_C,data_type)
+function [C,err,correl] = sparse_coding(x,D,nonzeros_C, data_type)
 
 % learn sparse code C for a given data and a given dictionary D
 
@@ -9,7 +9,7 @@ function [C,err,correl] = sparse_coding(x,D,nonzeros_C,data_type)
 
 %method used: LARS-EN
 
-% sahil: not understood the purpose of this, I guess this is in regards to
+% sahil: not fully understood the purpose of this, I guess this is in regards to
 % the extension of the LASSO based sparsity learning Marial et al to
 % Elastic Net. nonzeros_C represents cofficient for the L1 norm which
 % controls the sparsity and lambda2_C is for the group sparsity using L2
