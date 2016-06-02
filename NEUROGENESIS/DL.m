@@ -75,11 +75,12 @@ while t_end <= T  % up to T samples
     % sahil: code is the learned alphas   
     % sahil: seems that we only need evaluate function, not the relearning pf alphas again. 
     % sahil: either we should keep this or the ones in the end of the loop    
+    tic;
     [code,err(t,:),correl] = sparse_coding(x,D,nonzeros_C,data_type);
     correl_S(t,:) = correl(1,:);
     correl_P(t,:) = correl(2,:);
-    
-    %sahil commented the two lines belo as it seems that it is not being used.     
+    fprintf('Number of seconds to do sparse coding was %f.\n', toc);
+    %sahil commented the two lines below as it seems that it is not being used.     
 %     pre_err = err; pre_correl = correl; 
 %     pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
     
@@ -101,7 +102,9 @@ while t_end <= T  % up to T samples
 
 	% 2. sparse coding step AFTER adding random elements,to use it in dict update
     %   for each element in the data batch
+      tic;
       [code] = sparse_coding(x,D,nonzeros_C,data_type);
+      fprintf('Number of seconds to do sparse coding was %f.\n', toc);
 
      % matrices used by Mairal's dictionary update method
      
@@ -124,10 +127,22 @@ while t_end <= T  % up to T samples
     code_history = [];
 
     % sahil, why update of A and B also ?    
+    tic;
 	[D,A,B] = updateD(D,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method, A,B, data_history,code_history) ;
-   
+    fprintf('Number of seconds to update the dictionary was %f.\n', toc);
+%    
     [nzD,ind] = find(sum(abs(D)));
-    disp(num2str(length(ind)));
+    % active neurons.    
+    num_non_sparse_dictionary_elements = length(ind);
+    % Number of non-sparse dictionary elements. 
+    fprintf('Number of non-sparse dictionary elements are %d.\n', num_non_sparse_dictionary_elements);
+    clear num_non_sparse_dictionary_elements;
+    zero_idx = setdiff(1:size(D, 2), ind);
+    fprintf('The sparse dictionary elements are: %d.\n', zero_idx);
+    clear zero_idx;
+%     
+%     disp(num2str(length(ind)));
+% 
     if ~length(ind) 
         display 'empty dictionary!'
         pause;
@@ -142,7 +157,6 @@ while t_end <= T  % up to T samples
 %     [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzeros_C,data_type);    
 %     post_correl_S(t,:) = post_correl(1,:);
 %     post_correl_P(t,:) = post_correl(2,:);
-    
 end
 
 [er,ec] = size(err);

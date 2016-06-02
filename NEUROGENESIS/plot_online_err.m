@@ -1,4 +1,4 @@
-function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55)
+function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55, suffix)
 
  %%%% plot actual dictionary size vs error or vs correlation
 
@@ -40,14 +40,17 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     errorbar(1:floor(T/batch_size),m_err55,s_err55,'md-');
     
     legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast');
-    ss = sprintf('Online:  input dim n=%d, samples = %d',params.n, params.T); title(ss);
+    ss = sprintf('Online:  input dim n=%d, samples = %d ',params.n, params.T); title(strcat(ss, suffix));
     
     
     xlabel('iteration (batch)');
     ylabel('MSE (true, predicted)');
     ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
+    %sahil updated the code for adding the suffix parameter in the figure file names.      
+     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix), 'fig');
+     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix), 'png');
+    %sahil added code closing the figure after the saving.    
+     close(gcf);
      
     figure(3000+params.k);
     errorbar(1:floor(T/batch_size),m_correl00,s_correl00,'k--'); 
@@ -64,10 +67,10 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     
     xlabel('iteration (batch)');
     ylabel('Pearson correlation (true, predicted)');
-    ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
-     
-
-
+    ylim([0,1]);
+    %sahil updated the code for adding the suffix parameter in the figure file names.      
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix),'fig');
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix),'png');
+    %sahil added code closing the figure after the saving.    
+     close(gcf);
 end

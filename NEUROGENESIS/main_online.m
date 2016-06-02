@@ -8,10 +8,11 @@
 % 3. test on'unknown' ground-truth dictionary size, with a range of D sizes
 
 
-
-% clear all;
-% close all;
-
+% sahil uncommented the following two lines.
+% sahil put clear instead of "clear all" command.
+clear;
+close all;
+% 
 % addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
 addpath './ElasticNet';
 
@@ -32,9 +33,8 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.01,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
+               'lambda_D',0.02,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
                'test_or_train','train','dataname','lena');
-
 
 
 params.adapt='basic'; %'adapt';
@@ -52,7 +52,7 @@ for tt=3:3
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
 for T =  100 %300]
     Ti = Ti + 1;
-    k_array = [25 50 100 150 ]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
+    k_array = [25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;
@@ -126,7 +126,8 @@ for T =  100 %300]
 
     saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
     saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
- 
+    %sahil added code closing the figure after the saving.    
+     close(gcf);
      
     %%%% plot actual dictionary size vs error or vs correlation
     figure(tt+10000); 
@@ -147,7 +148,8 @@ for T =  100 %300]
     ylim([0,1]);    
      saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
      saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
-     
+    %sahil added code closing the figure after the saving.    
+     close(gcf);     
      
      %%err
          %%%% plot actual dictionary size vs error or vs correlation
@@ -169,9 +171,8 @@ for T =  100 %300]
     ylim([0,1]);    
      saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
      saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
-     
-     
-     
+    %sahil added code closing the figure after the saving.    
+     close(gcf);     
  
 %%
  

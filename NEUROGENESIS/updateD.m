@@ -13,7 +13,6 @@ n = size(D_old,1);
 k = size(D_old,2);
 D = D_old;
     
-% sahil: currently understanding working of the Mairal method.
 % 
 switch D_update_method
     case 'SG' %stochastic gradient with thresholding, i.e. proximal method
@@ -98,7 +97,7 @@ switch D_update_method
     case 'Mairal'
         % sahil: this is the standard implementation of the pseudo code in Algo 2 in the paper Mairal et al.
         % challenge is understanding why this algo should work.        
-        converged = 0;  
+        converged = 0;
         while ~converged
             Dprev = D;
             for j=1:k
@@ -126,22 +125,27 @@ switch D_update_method
             
                 if ~A(j,j)
                     a = 1;
-                else a = A(j,j);  end
+                else
+                    a = A(j,j);  
+                end
                 
                 % updates for group dictionary learning Bengio 2009
                 z =  A(j,:)*D' - A(j,j)*D(:,j)';
                 if nnz(isnan(z))
                     display 'Nan in z';
                 end 
+%                 
                 uj =  B(:,j) - z'; 
+%                 
                 if ~(D(:,j)'*D(:,j))
                     display 'zero norm of D_j' 
                 end
+%                 
                 coef = (1-lambda_D/sqrt(D(:,j)'*D(:,j)));
                 if isnan(coef)
                     display 'nan coef';
                 end;
-                
+%                 
                 if coef < 0
                     coef = 0;
                 end  
@@ -164,8 +168,8 @@ switch D_update_method
 
             end
 
-            
-            max(max(abs(Dprev-D)))
+            % sahil: commenting the line below as it should be printed only if debugging the code.            
+%             max(max(abs(Dprev-D)))
             
             if max(max(abs(Dprev-D))) < epsilon
                 converged = 1;
