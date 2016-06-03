@@ -33,7 +33,7 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.1,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
+               'lambda_D',0.01,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
                'test_or_train','train','dataname','lena');
 
 
@@ -50,7 +50,7 @@ for tt=3:3
     end
     
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
-for T =  1000 %100]
+for T =  300 %100]
     Ti = Ti + 1;
     k_array = [25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];

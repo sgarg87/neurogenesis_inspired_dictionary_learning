@@ -1,4 +1,4 @@
-function [D,err,correl_all] = DL(data,D0,nonzeros_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,D_update_method)
+function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,D_update_method)
 % 
 % sahil: D0 is initialization of the dictionary
 % sahil: D_update_method parameter means that this is a general method for any of the dictionary update methods expect the neurogenesis.
@@ -76,7 +76,7 @@ while t_end <= T  % up to T samples
     % sahil: seems that we only need evaluate function, not the relearning pf alphas again. 
     % sahil: either we should keep this or the ones in the end of the loop    
     tic;
-    [code,err(t,:),correl] = sparse_coding(x,D,nonzeros_C,data_type);
+    [code,err(t,:),correl] = sparse_coding(x,D,nonzero_frac,data_type);
     correl_S(t,:) = correl(1,:);
     correl_P(t,:) = correl(2,:);
     fprintf('Number of seconds to do sparse coding was %f.\n', toc);
@@ -85,7 +85,7 @@ while t_end <= T  % up to T samples
 %     pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
     
     
-        
+     
     if new_elements <0 % initial dictionary    
 		continue;
     end
@@ -97,19 +97,29 @@ while t_end <= T  % up to T samples
         B = [B zeros(n,new_elements)];
         A = [A zeros(k,new_elements)];  
         A = [A;zeros(new_elements,k+new_elements)];
+        % sahil: added code lines below to update C (C is not used currently except for debugging).
+        if ~isempty(C)
+            display(new_elements);
+            C(k+1:k+new_elements, :) = 0;
+        end
+        % sahil code ends here.
 		k = k + new_elements;
 	end
 
 	% 2. sparse coding step AFTER adding random elements,to use it in dict update
     %   for each element in the data batch
       tic;
-      [code] = sparse_coding(x,D,nonzeros_C,data_type);
+      display(nonzero_frac);
+      [code] = sparse_coding(x,D,nonzero_frac,data_type);
       fprintf('Number of seconds to do sparse coding was %f.\n', toc);
 
-     % matrices used by Mairal's dictionary update method
-     
+     % matrices used by Mairal's dictionary update method     
       A = A + code*code';  
       B = B + x*code';
+     % sahil: adding these code to the matrix to keep track of all the learning together.       
+     C = [C code];
+%      display(code);
+     % sahil code ends here.     
 	
       if nnz(isnan(A))
         display 'A is NaN';
@@ -123,7 +133,7 @@ while t_end <= T  % up to T samples
     % sahil: checked that we don't really use the code_history. so, for now, should we comment the code below.    
 %     sahil commented the line below and instead initilizing code_history
 %     to empty.
-%     [code_history] = sparse_coding(data_history,D,nonzeros_C,data_type);
+%     [code_history] = sparse_coding(data_history,D,nonzero_frac,data_type);
     code_history = [];
 
     % sahil, why update of A and B also ?    
@@ -157,10 +167,15 @@ while t_end <= T  % up to T samples
             B = B(:,ind);
             A = A(:,ind); A = A(ind,:);
             k = length(ind);
+            %
+            % sahil: adding code line below for updating C (C is used only for debugging as of now).
+            C = C(ind, :);
+            % sahil code ends here.             
     end
     
-    % sahil: seems that this code is not really required. so, commenting it.
-%     [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzeros_C,data_type);    
+%     sahil: seems that this code is not really required. so, commenting it
+%     ?
+%     [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzero_frac,data_type);
 %     post_correl_S(t,:) = post_correl(1,:);
 %     post_correl_P(t,:) = post_correl(2,:);
 end

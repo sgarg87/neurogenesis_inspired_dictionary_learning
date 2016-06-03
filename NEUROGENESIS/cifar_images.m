@@ -17,8 +17,8 @@ function [stationary_data_train, stationary_data_test, nonstationary_data_train,
     end
     %using this data_train to obtain both train and test for the model. stationary regime where some data samples from each class appear sequentially
     %originally there are 500 images in each class here.
-    stationary_data_train = stationary_data(:, 1:2:end);
-    stationary_data_test = stationary_data(:, 2:2:end);
+    stationary_data_train = stationary_data(:, 1:25:end);
+    stationary_data_test = stationary_data(:, 2:25:end);
     clear stationary_data;
 % 
 % 
@@ -39,7 +39,7 @@ function [stationary_data_train, stationary_data_test, nonstationary_data_train,
         nonstationary_data = preprocess_data(nonstationary_data);
     end
     % equally splitting into train and test     
-    nonstationary_data_train = nonstationary_data(:, 1:2:end);
-    nonstationary_data_test = nonstationary_data(:, 2:2:end);
+    nonstationary_data_train = nonstationary_data(:, 1:5:end);
+    nonstationary_data_test = nonstationary_data(:, 2:5:end);
     clear nonstationary_data;
     

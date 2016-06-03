@@ -1,14 +1,14 @@
-function [C,err,correl] = sparse_coding(x,D,nonzeros_C, data_type)
+function [C,err,correl] = sparse_coding(x,D,nonzero_frac, data_type)
 
 % learn sparse code C for a given data and a given dictionary D
 
 % parameters:
 % nonzeros_C - regularization parameter for optimizing sparse code C: for LARS, # of nonzeros
-%              if nonzeros = -1, the sparsity level is selected automatically as  best-fitting for each given 
+%              if nonzeros = -1, the sparsity level is selected automatically as  best-fitting for each given
 % data_type - 'Gaussian', or 'Bernoulli', or another exp-family
 
 %method used: LARS-EN
-
+% 
 % sahil: not fully understood the purpose of this, I guess this is in regards to
 % the extension of the LASSO based sparsity learning Marial et al to
 % Elastic Net. nonzeros_C represents cofficient for the L1 norm which
@@ -17,7 +17,12 @@ function [C,err,correl] = sparse_coding(x,D,nonzeros_C, data_type)
 lambda2_C = 0.00001; %0;  % LASSO
 k = size(D,2);
 C = [];
-
+% 
+% 
+% sahil added code to compute number of nonzeros.
+nonzeros_C = floor(k*nonzero_frac);
+% 
+% 
 % sahil: iterating over all the data points in the batch (x)
 % sahil: each column in x is a single data point
 for i = 1:size(x,2)

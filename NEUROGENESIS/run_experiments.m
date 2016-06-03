@@ -20,11 +20,21 @@ data_type = params.data_type;
 noise = params.noise;
 True_nonzero_frac = params.True_nonzero_frac;
 nonzero_frac = params.nonzero_frac;
-test_or_train = params.test_or_train; 
+test_or_train = params.test_or_train;
+%
 % 
-nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim
- 
-% columns of data: input signals (samples)
+% Important!
+% sahil comments start.
+% this is a bug. number of nonzero is decided based upon number of
+% dictionary elements. This doesn't have anything to do with dimension of
+% input data or the corresponding dimension of dictionary elements.
+% sahil: since the number of dictionary elements in the algorithms, the
+% number of nonzero should be decided not here but just before learning C.
+% sahil end.
+% sahil commenting the the line below (instead passing nonzero_frac to the
+% appropriate functions).
+% nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim
+% % columns of data: input signals (samples)
 
 %%%%%%%%%%%%%%%%%%% simulated datasets %%%%%%%%%%%%%%%%%%%
 
@@ -54,9 +64,9 @@ else
     [train_data, test_data, data0, test_data0, n] = cifar_images(true);
     % each column is a data point. 
     train_data = train_data(:, 1:T);
-    test_data = test_data(:, 1:10:T);
-    data0 = data0(:, 1:100);
-    test_data0 = test_data0(:, 1:100);
+    test_data = test_data(:, 1:T);
+    data0 = data0(:, 1:T);
+    test_data0 = test_data0(:, 1:T);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
@@ -66,9 +76,10 @@ end
 
 % sahil: initializing the dictionary here, and normalizing (to see what norm and which dimension, I guess first dimension)
 D_init = normalize(rand(n,k));
-% sahil: not sure if dictionary vectors are sparse here or or the number of vectors sparse in general
-nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim
- 
+% 
+% sahil: as mentioned above, this is a bug. just passing the fraction instead of the actual number of nonzeros in C.
+% sahil: commenting the code line below.
+% nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim. 
 
 % fixed-size dictionary (baseline method-SG and Mairal)  
 
@@ -79,7 +90,7 @@ nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fracti
 % main_batch and main_online.
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for random case.\n');
-[D0,err00,correl00] = DL(train_data,D_init,nonzero_C,0,mu,eta,epsilon,T,-1,data_type,D_update_method);
+[D0,err00,correl00] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method);
 
 %plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55);
 
@@ -87,21 +98,21 @@ fprintf('Learning the dictionary model for random case.\n');
 %[D1,err11,correl11] =  DL_neurogen(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for neurogenesis with Group Mairal.\n');
-[D1,err11,correl11] =  DL(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
+[D1,err11,correl11] =  DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
  
 
 % neurogenesis - with SG
 %[D2,err22,correl22] = DL_neurogen(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for neurogenesis with SG.\n');
-[D2,err22,correl22] = DL(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');
+[D2,err22,correl22] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');
 
 
 % group-sparse coding (Bengio et al 2009)
 % sahil: no new dictionary elements but deleting existing elements
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for Group Mairal.\n');
-[D3,err33,correl33] = DL(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal');
+[D3,err33,correl33] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal');
 
 % sahil: discuss this also with Dr. Rish.
 %%  TO DEBUG: group Mairal with lambda_D = 0 does not seem to work properly
@@ -110,13 +121,13 @@ fprintf('Learning the dictionary model for Group Mairal.\n');
 %% fixed-size-SG
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for SG (no sparsity though).\n');
-[D4,err44,correl44] = DL(train_data,D_init,nonzero_C,0,mu,eta,epsilon,T,0,data_type,'SG');  
+[D4,err44,correl44] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  
 
 
 % fixed-size-Mairal
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for Mairal.\n');
-[D5,err55,correl55] = DL(train_data,D_init,nonzero_C,0,mu,eta,epsilon,T,0,data_type,'Mairal');
+[D5,err55,correl55] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');
 
 %%%   legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast'); 
 
@@ -130,12 +141,12 @@ fprintf('Generating plots for training error.\n');
 % sahil added the code below for evaluating the model on test data.
 fprintf('Computing test error by computing sparse codings function ...\n');
 tic;
-[~,err00_test, correl00_test] = sparse_coding(test_data,D0,nonzero_C,data_type); % random-D
-[~,err11_test, correl11_test] = sparse_coding(test_data,D1,nonzero_C,data_type);% neurogen-group-Mairal
-[~,err22_test, correl22_test] = sparse_coding(test_data,D2,nonzero_C,data_type); % neurogen-SG
-[~,err33_test, correl33_test] = sparse_coding(test_data,D3,nonzero_C,data_type);    % groupMairal 
-[~,err44_test, correl44_test] = sparse_coding(test_data,D4,nonzero_C,data_type);    % SG       
-[~,err55_test, correl55_test] = sparse_coding(test_data,D5,nonzero_C,data_type);    % Mairal 
+[~,err00_test, correl00_test] = sparse_coding(test_data,D0,nonzero_frac,data_type); % random-D
+[~,err11_test, correl11_test] = sparse_coding(test_data,D1,nonzero_frac,data_type); % neurogen-group-Mairal
+[~,err22_test, correl22_test] = sparse_coding(test_data,D2,nonzero_frac,data_type); % neurogen-SG
+[~,err33_test, correl33_test] = sparse_coding(test_data,D3,nonzero_frac,data_type); % groupMairal 
+[~,err44_test, correl44_test] = sparse_coding(test_data,D4,nonzero_frac,data_type); % SG       
+[~,err55_test, correl55_test] = sparse_coding(test_data,D5,nonzero_frac,data_type); % Mairal 
 fprintf('Time to compute was %f.\n', toc);
 % sahil also added code line below to generate plots for evaluation on test
 % data. (note: the evaluation below this code line is for the other test
@@ -166,42 +177,42 @@ plot_online_err(params,err00_test,correl00_test,err11_test,correl11_test,err22_t
 
 switch test_or_train 
 case 'train'
-    [C,err0,correl0] = sparse_coding(train_data,D0,nonzero_C,data_type); % random-D
-    [C,err1,correl1] = sparse_coding(train_data,D1,nonzero_C,data_type);% neurogen-group-Mairal
-    [C,err2,correl2] = sparse_coding(train_data,D2,nonzero_C,data_type); % neurogen-SG
-    [C,err3,correl3] = sparse_coding(train_data,D3,nonzero_C,data_type);    % groupMairal 
-    [C,err4,correl4] = sparse_coding(train_data,D4,nonzero_C,data_type);    % SG       
-    [C,err5,correl5] = sparse_coding(train_data,D5,nonzero_C,data_type);    % Mairal 
+    [C,err0,correl0] = sparse_coding(train_data,D0,nonzero_frac,data_type); % random-D
+    [C,err1,correl1] = sparse_coding(train_data,D1,nonzero_frac,data_type);% neurogen-group-Mairal
+    [C,err2,correl2] = sparse_coding(train_data,D2,nonzero_frac,data_type); % neurogen-SG
+    [C,err3,correl3] = sparse_coding(train_data,D3,nonzero_frac,data_type);    % groupMairal 
+    [C,err4,correl4] = sparse_coding(train_data,D4,nonzero_frac,data_type);    % SG       
+    [C,err5,correl5] = sparse_coding(train_data,D5,nonzero_frac,data_type);    % Mairal 
 
 case 'test'
-    [C,err0,correl0] = sparse_coding(test_data,D0,nonzero_C,data_type); % random-D
-    [C,err1,correl1] = sparse_coding(test_data,D1,nonzero_C,data_type);% neurogen-group-Mairal
-    [C,err2,correl2] = sparse_coding(test_data,D2,nonzero_C,data_type); % neurogen-SG
-    [C,err3,correl3] = sparse_coding(test_data,D3,nonzero_C,data_type);    % groupMairal 
-    [C,err4,correl4] = sparse_coding(test_data,D4,nonzero_C,data_type);    % SG       
-    [C,err5,correl5] = sparse_coding(test_data,D5,nonzero_C,data_type);    % Mairal 
+    [C,err0,correl0] = sparse_coding(test_data,D0,nonzero_frac,data_type); % random-D
+    [C,err1,correl1] = sparse_coding(test_data,D1,nonzero_frac,data_type);% neurogen-group-Mairal
+    [C,err2,correl2] = sparse_coding(test_data,D2,nonzero_frac,data_type); % neurogen-SG
+    [C,err3,correl3] = sparse_coding(test_data,D3,nonzero_frac,data_type);    % groupMairal 
+    [C,err4,correl4] = sparse_coding(test_data,D4,nonzero_frac,data_type);    % SG       
+    [C,err5,correl5] = sparse_coding(test_data,D5,nonzero_frac,data_type);    % Mairal 
 
 case 'nonstat'       
     is_update_dictionary_fr_nonstationary = false;
 %     
     if is_update_dictionary_fr_nonstationary
-         [D0,err0,correl0] = DL(data0,D0,nonzero_C,0,mu,eta,epsilon,T,-1,data_type,D_update_method); %random-D
+         [D0,err0,correl0] = DL(data0,D0,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method); %random-D
         %     [D1,err1,correl1] = DL_neurogen(data0,D1,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
         %     [D2,err2,correl2] = DL_neurogen(data0,D2,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
-         [D1,err1,correl1] = DL(data0,D1,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
-         [D2,err2,correl2] = DL(data0,D2,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
+         [D1,err1,correl1] = DL(data0,D1,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
+         [D2,err2,correl2] = DL(data0,D2,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
 
-         [D3,err3,correl3] = DL(data0,D3,nonzero_C,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal'); %group Mairal
-         [D4,err4,correl4] = DL(data0,D4,nonzero_C,0,mu,eta,epsilon,T,0,data_type,'SG');  % just SG
-         [D5,err5,correl5] = DL(data0,D5,nonzero_C,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
+         [D3,err3,correl3] = DL(data0,D3,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal'); %group Mairal
+         [D4,err4,correl4] = DL(data0,D4,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  % just SG
+         [D5,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
     end
 % 
-    [C,err0,correl0] = sparse_coding(test_data0,D0,nonzero_C,data_type); % random-D
-    [C,err1,correl1] = sparse_coding(test_data0,D1,nonzero_C,data_type);% neurogen-group-Mairal
-    [C,err2,correl2] = sparse_coding(test_data0,D2,nonzero_C,data_type); % neurogen-SG
-    [C,err3,correl3] = sparse_coding(test_data0,D3,nonzero_C,data_type);    % groupMairal 
-    [C,err4,correl4] = sparse_coding(test_data0,D4,nonzero_C,data_type);    % SG       
-    [C,err5,correl5] = sparse_coding(test_data0,D5,nonzero_C,data_type);    % Mairal    
+    [C,err0,correl0] = sparse_coding(test_data0,D0,nonzero_frac,data_type); % random-D
+    [C,err1,correl1] = sparse_coding(test_data0,D1,nonzero_frac,data_type);% neurogen-group-Mairal
+    [C,err2,correl2] = sparse_coding(test_data0,D2,nonzero_frac,data_type); % neurogen-SG
+    [C,err3,correl3] = sparse_coding(test_data0,D3,nonzero_frac,data_type);    % groupMairal 
+    [C,err4,correl4] = sparse_coding(test_data0,D4,nonzero_frac,data_type);    % SG       
+    [C,err5,correl5] = sparse_coding(test_data0,D5,nonzero_frac,data_type);    % Mairal    
 end   
 % 
 % 
