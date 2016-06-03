@@ -38,6 +38,7 @@ switch D_update_method
         L = S(1,1)+0.01;
         eta = 1/L;
         % gradient step; first index - input dimension, second - dictionary element
+                % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.     
                 D = D - eta*(link_func(D*code,data_type) - x)*code';
                 
                 if nnz(isinf(D))

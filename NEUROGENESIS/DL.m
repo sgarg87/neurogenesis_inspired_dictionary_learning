@@ -138,8 +138,14 @@ while t_end <= T  % up to T samples
     fprintf('Number of non-sparse dictionary elements are %d.\n', num_non_sparse_dictionary_elements);
     clear num_non_sparse_dictionary_elements;
     zero_idx = setdiff(1:size(D, 2), ind);
-    fprintf('The sparse dictionary elements are: %d.\n', zero_idx);
-    clear zero_idx;
+%     
+    if length(zero_idx)
+        display('The indices of the killed dictionary elements are:');
+        display(zero_idx);
+        clear zero_idx;
+    else
+        display('No elements killed.')
+    end
 %     
 %     disp(num2str(length(ind)));
 % 

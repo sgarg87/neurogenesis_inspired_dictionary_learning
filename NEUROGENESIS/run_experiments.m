@@ -52,11 +52,11 @@ if is_patches
 else
     % or real images itself (Sahil)
     [train_data, test_data, data0, test_data0, n] = cifar_images(true);
-    % each column is a data point.    
+    % each column is a data point. 
     train_data = train_data(:, 1:T);
-    test_data = test_data(:, 1:T);
-    data0 = data0(:, 1:T);
-    test_data0 = test_data0(:, 1:T);
+    test_data = test_data(:, 1:10:T);
+    data0 = data0(:, 1:100);
+    test_data0 = test_data0(:, 1:100);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
@@ -123,8 +123,11 @@ fprintf('Learning the dictionary model for Mairal.\n');
 % sahil updated the code (the last parameter) for adding suffix to plot names.
 fprintf('Generating plots for training error.\n');
  plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55, 'train');
-% sahil added the code below for evaluating the model on test data.
+%  
 % 
+% 
+% 
+% sahil added the code below for evaluating the model on test data.
 fprintf('Computing test error by computing sparse codings function ...\n');
 tic;
 [~,err00_test, correl00_test] = sparse_coding(test_data,D0,nonzero_C,data_type); % random-D
@@ -139,7 +142,13 @@ fprintf('Time to compute was %f.\n', toc);
 % data which is non-stationary w.r.t. these data sets).
 fprintf('Generating plots for testing error.\n');
 plot_online_err(params,err00_test,correl00_test,err11_test,correl11_test,err22_test,correl22_test,err33_test,correl33_test,err44_test,correl44_test,err55_test,correl55_test, 'test'); 
-
+% 
+% 
+% 
+% 
+% 
+% 
+% 
 % %----------  Mairal's dictionary learning
 % 
 % param.D = D_init;  
