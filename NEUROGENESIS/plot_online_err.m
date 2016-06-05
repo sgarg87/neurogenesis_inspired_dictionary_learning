@@ -46,12 +46,14 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     xlabel('iteration (batch)');
     ylabel('MSE (true, predicted)');
     ylim([0,1]);    
-    %sahil updated the code for adding the suffix parameter in the figure file names.      
-     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix), 'fig');
-     saveas(gcf,sprintf('Figures/online_%s_k%d_err_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix), 'png');
+    %sahil updated the code for adding the suffix parameter in the figure file names.
+    file_path = sprintf('Figures/online_%s_k%d_err_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix);
+%     display(file_path);
+    saveas(gcf, file_path, 'fig');
+    saveas(gcf, file_path, 'png');
     %sahil added code closing the figure after the saving.    
-     close(gcf);
-     
+    close(gcf);
+%      
     figure(3000+params.k);
     errorbar(1:floor(T/batch_size),m_correl00,s_correl00,'k--'); 
     hold on;        
@@ -69,8 +71,8 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     ylabel('Pearson correlation (true, predicted)');
     ylim([0,1]);
     %sahil updated the code for adding the suffix parameter in the figure file names.      
-    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix),'fig');
-    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_lam%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt, suffix),'png');
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'fig');
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'png');
     %sahil added code closing the figure after the saving.    
-     close(gcf);
+    close(gcf);
 end

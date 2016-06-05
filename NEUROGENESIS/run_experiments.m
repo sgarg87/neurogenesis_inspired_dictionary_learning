@@ -61,12 +61,17 @@ if is_patches
     [train_data, test_data, n] = lena_patches(T);
 else
     % or real images itself (Sahil)
-    [train_data, test_data, data0, test_data0, n] = cifar_images(true);
-    % each column is a data point. 
-    train_data = train_data(:, 1:T);
-    test_data = test_data(:, 1:T);
-    data0 = data0(:, 1:T);
-    test_data0 = test_data0(:, 1:T);
+    [train_data_map, test_data_map, n] = cifar_images_online(true, T);
+    % sea   
+    train_data = train_data_map{72};
+    assert (size(train_data, 2) == T);
+    test_data = test_data_map{72};
+    assert (size(test_data, 2) == T);
+    % each column is a data point.
+    data0 = train_data_map{89};
+    assert (size(data0, 2) == T);
+    test_data0 = test_data_map{89};
+    assert (size(test_data0, 2) == T);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
@@ -133,7 +138,7 @@ fprintf('Learning the dictionary model for Mairal.\n');
 
 % sahil updated the code (the last parameter) for adding suffix to plot names.
 fprintf('Generating plots for training error.\n');
- plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55, 'train');
+plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55, 'train');
 %  
 % 
 % 
@@ -193,18 +198,35 @@ case 'test'
     [C,err5,correl5] = sparse_coding(test_data,D5,nonzero_frac,data_type);    % Mairal 
 
 case 'nonstat'       
-    is_update_dictionary_fr_nonstationary = false;
+    is_update_dictionary_fr_nonstationary = true;
 %     
     if is_update_dictionary_fr_nonstationary
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for Random.\n');
          [D0,err0,correl0] = DL(data0,D0,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method); %random-D
+        %         
         %     [D1,err1,correl1] = DL_neurogen(data0,D1,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
         %     [D2,err2,correl2] = DL_neurogen(data0,D2,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
-         [D1,err1,correl1] = DL(data0,D1,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
-         [D2,err2,correl2] = DL(data0,D2,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
-
-         [D3,err3,correl3] = DL(data0,D3,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal'); %group Mairal
-         [D4,err4,correl4] = DL(data0,D4,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  % just SG
-         [D5,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for neurogen with Group Mairal.\n');
+        [D1,err1,correl1] = DL(data0,D1,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for neurogen with SG.\n');
+        [D2,err2,correl2] = DL(data0,D2,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for group Mairal.\n');
+        [D3,err3,correl3] = DL(data0,D3,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal'); %group Mairal
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for SG (no sparsity though).\n');
+        [D4,err4,correl4] = DL(data0,D4,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  % just SG
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for Mairal.\n');
+        [D5,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
     end
 % 
     [C,err0,correl0] = sparse_coding(test_data0,D0,nonzero_frac,data_type); % random-D

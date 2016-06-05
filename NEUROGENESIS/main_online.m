@@ -34,7 +34,7 @@ Ti=0;
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
                'lambda_D',0.01,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
-               'test_or_train','train','dataname','lena');
+               'test_or_train','train','dataname','cifar100');
 
 
 params.adapt='basic'; %'adapt';
@@ -50,9 +50,9 @@ for tt=3:3
     end
     
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
-for T =  300 %100]
+for T =  20 %100 %300]
     Ti = Ti + 1;
-    k_array = [25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
+    k_array = [5 10 15 20];  %[25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;
@@ -117,21 +117,21 @@ for T =  300 %100]
     figure(1000+tt); hold on;
     plot(k_array,learned_k0,'k--',k_array,learned_k1,'bx-',k_array,learned_k2,'bo-',k_array,learned_k3,'rs-',...
         k_array,learned_k4,'gv-',k_array,learned_k5,'md-');    
-    
+%     
     legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast'); 
-    
+%     
     ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
     xlabel('initial dictionary size k');
     ylabel('learned dictionary size');
-
-    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
-    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
+    % 
+    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);
      
     %%%% plot actual dictionary size vs error or vs correlation
     figure(tt+10000); 
-    errorbar(learned_k0,mean(correl0_P'),std(correl0_P'),'k--'); 
+    errorbar(learned_k0,mean(correl0_P'),std(correl0_P'),'k--');
     hold on;        
     errorbar(learned_k1,mean(correl1_P'),std(correl1_P'),'bx-'); 
     errorbar(learned_k2,mean(correl2_P'),std(correl2_P'),'bo-');  
@@ -146,17 +146,17 @@ for T =  300 %100]
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
     ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
+     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);     
      
      %%err
          %%%% plot actual dictionary size vs error or vs correlation
-    figure(tt+100); 
+    figure(tt+100);
     errorbar(learned_k0,mean(err0'),std(err0'),'k--'); 
     hold on;        
-    errorbar(learned_k1,mean(err1'),std(err1'),'bx-'); 
+    errorbar(learned_k1,mean(err1'),std(err1'),'bx-');
     errorbar(learned_k2,mean(err2'),std(err2'),'bo-');  
     errorbar(learned_k3,mean(err3'),std(err3'),'rs-'); 
     errorbar(learned_k4,mean(err4'),std(err4'),'gv-');
@@ -169,8 +169,8 @@ for T =  300 %100]
     xlabel('final dictionary size k');
     ylabel('MSE');
     ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_lam%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,100*params.lambda_D,params.T,params.new_elements,params.adapt),'png');
+     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);     
  
