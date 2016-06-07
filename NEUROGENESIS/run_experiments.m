@@ -55,6 +55,7 @@ test_or_train = params.test_or_train;
 
 %%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 is_patches = false;
+% 
 if is_patches
      %real images (patches)
     [data0, test_data0] = boat_patches(T);
@@ -179,7 +180,8 @@ plot_online_err(params,err00_test,correl00_test,err11_test,correl11_test,err22_t
 
 %sahil: todo- in case of non-stationary evaluation, it would be interesting to evaluate without the training. 
 % 
-
+% display(test_or_train);
+% 
 switch test_or_train 
 case 'train'
     [C,err0,correl0] = sparse_coding(train_data,D0,nonzero_frac,data_type); % random-D

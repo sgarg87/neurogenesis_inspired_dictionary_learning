@@ -1,4 +1,11 @@
 function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess, num_data_per_label)
+    %
+    if num_data_per_label ~= -1
+        assert (num_data_per_label >= 1);
+        assert (mod(500, num_data_per_label) == 0);
+        assert (mod(100, num_data_per_label) == 0);
+    end
+    %     
     cifar_path = './Data/cifar-100-matlab/';
     %     
     % training data    
@@ -6,21 +13,30 @@ function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess
     data_train = prepare_data_fr_raw(train, is_preprocess); clear train;
     num_pixels = size(data_train, 1);
     assert (size(data_train, 2) == 50000);   
-    assert (mod(500, num_data_per_label) == 0);
-    data_train = data_train(:, 1:(500/num_data_per_label):end);
-    data_train = postprocess(data_train, num_data_per_label);
+    %
+    if num_data_per_label ~= -1
+        data_train = data_train(:, 1:(500/num_data_per_label):end);
+    end
     %     
+    data_train = postprocess(data_train);
     % test data
     test = load(strcat(cifar_path, 'test.mat'));
     data_test = prepare_data_fr_raw(test, is_preprocess); clear test;
     assert (num_pixels == size(data_test, 1));
     assert (size(data_test, 2) == 10000);
-    assert (mod(100, num_data_per_label) == 0);
-    data_test = data_test(:, 1:(100/num_data_per_label):end);
-    data_test = postprocess(data_test, num_data_per_label);
+    %     
+    if num_data_per_label ~= -1 
+        data_test = data_test(:, 1:(100/num_data_per_label):end);
+    end
+    %     
+    data_test = postprocess(data_test);
 end
 
-function data_train = postprocess(data_train, num_data_per_label)
+function data_train = postprocess(data_train)
+    num_data = size(data_train, 2);
+    num_data_per_label = num_data/100;
+    assert(mod(num_data_per_label, 1) == 0);
+    %
     data_train_map = cell(100, 1);
     for curr_label = 1:100
         curr_idx = ((curr_label-1)*num_data_per_label)+1:(curr_label*num_data_per_label);

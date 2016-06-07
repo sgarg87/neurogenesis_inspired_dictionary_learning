@@ -15,12 +15,16 @@ function [C,err,correl] = sparse_coding(x,D,nonzero_frac, data_type)
 % controls the sparsity and lambda2_C is for the group sparsity using L2
 % norm.
 lambda2_C = 0.00001; %0;  % LASSO
+% 
 k = size(D,2);
+% 
 C = [];
 % 
-% 
+%
 % sahil added code to compute number of nonzeros.
 nonzeros_C = floor(k*nonzero_frac);
+% display(nonzeros_C);
+% nonzeros_C = floor(size(D, 1)*nonzero_frac);
 % 
 % 
 % sahil: iterating over all the data points in the batch (x)

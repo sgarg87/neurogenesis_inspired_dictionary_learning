@@ -17,7 +17,8 @@ close all;
 addpath './ElasticNet';
 
 %n = 64; % number of inputs (simulated or real 8x8 patches)
-n=1024;%32x32 images.
+% n=1024;%32x32 images.
+n=256; %16x16 image patches.
 Ti=0;
 
 % %n = 64; % number of inputs (simulated or real 8x8 patches)
@@ -33,9 +34,8 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.01,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
+               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',1.0, ...
                'test_or_train','train','dataname','cifar100');
-
 
 params.adapt='basic'; %'adapt';
 for tt=3:3
@@ -50,9 +50,9 @@ for tt=3:3
     end
     
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
-for T =  20 %100 %300]
+for T = 100 %300]
     Ti = Ti + 1;
-    k_array = [5 10 15 20];  %[25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
+    k_array = [25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;
@@ -62,8 +62,8 @@ for T =  20 %100 %300]
         ki = ki+1;
         params.n = n; 
         params.k = k; 
-        params.T = T; 
-        params.new_elements =  10; %floor(k/5); % floor(2*n*log10(k));  % the number of new elements added for each element;
+        params.T = T;
+        params.new_elements = 10; %floor(k/3); %floor(k/5); % floor(2*n*log10(k));  % the number of new elements added for each element;
         %params.lambda_D = 1; % 'killing' weight parameter in l1/l2 regularization (need theory on how to set it asymptotically)
    %     [new_elements,err0(ki,:),correl0(ki,:),learned_k0(ki), err1(ki,:),correl1(ki,:),learned_k1(ki), err2(ki,:),correl2(ki,:),learned_k2(ki),err3(ki,:), correl3(ki,:), learned_k3(ki)] = run_experiments(n,k,T);       
         
