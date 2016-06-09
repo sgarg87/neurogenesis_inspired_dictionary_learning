@@ -15,10 +15,12 @@ close all;
 % 
 % addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
 addpath './ElasticNet';
-
-%n = 64; % number of inputs (simulated or real 8x8 patches)
-% n=1024;%32x32 images.
-n=256; %16x16 image patches.
+% 
+randn('seed', 0);
+rand('seed', 0);
+% 
+% n=256;%16x16 image.
+n=1024;%32x32 images 
 Ti=0;
 
 % %n = 64; % number of inputs (simulated or real 8x8 patches)
@@ -34,7 +36,7 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',1.0, ...
+               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.05, ...
                'test_or_train','train','dataname','cifar100');
 
 params.adapt='basic'; %'adapt';
@@ -50,9 +52,9 @@ for tt=3:3
     end
     
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
-for T = 100 %300]
+for T = 500 %300]
     Ti = Ti + 1;
-    k_array = [25 50 100 150]; %[ 25 50  100 150];%(n/2):(n/2):(4*n);
+    k_array = [25 50 100 150]; % 200 250 350 500 600]; %(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;
@@ -72,16 +74,18 @@ for T = 100 %300]
                       err2(ki,:),correl2,learned_k2(ki), ...
                       err3(ki,:),correl3,learned_k3(ki), ... 
                       err4(ki,:),correl4,learned_k4(ki), ...
-                      err5(ki,:),correl5,learned_k5(ki)] = run_experiments(params);    
+                      err5(ki,:),correl5,learned_k5(ki), ...
+                      err6(ki,:),correl6,learned_k6(ki)] = run_experiments(params);    
    
         correl0_S(ki,:) = correl0(1,:);correl1_S(ki,:) = correl1(1,:);
         correl2_S(ki,:) = correl2(1,:);correl3_S(ki,:) = correl3(1,:);
         correl4_S(ki,:) = correl4(1,:);correl5_S(ki,:) = correl5(1,:);
-        
+        correl6_S(ki,:) = correl6(1,:);
+        %         
         correl0_P(ki,:) = correl0(2,:);correl1_P(ki,:) = correl1(2,:);
         correl2_P(ki,:) = correl2(2,:);correl3_P(ki,:) = correl3(2,:);
         correl4_P(ki,:) = correl4(2,:);correl5_P(ki,:) = correl5(2,:);
-
+        correl6_P(ki,:) = correl6(2,:);
     end
 %     figure(tt); 
 %     errorbar(k_array,mean(correl0_P'),std(correl0_P'),'k--'); 
@@ -116,9 +120,9 @@ for T = 100 %300]
     
     figure(1000+tt); hold on;
     plot(k_array,learned_k0,'k--',k_array,learned_k1,'bx-',k_array,learned_k2,'bo-',k_array,learned_k3,'rs-',...
-        k_array,learned_k4,'gv-',k_array,learned_k5,'md-');    
+        k_array,learned_k4,'gv-',k_array,learned_k5,'md-', k_array,learned_k6,'c+-');
 %     
-    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast'); 
+    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal', 'neurogen-Mairal', 'location','SouthEast'); 
 %     
     ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
     xlabel('initial dictionary size k');
@@ -138,8 +142,9 @@ for T = 100 %300]
     errorbar(learned_k3,mean(correl3_P'),std(correl3_P'),'rs-'); 
     errorbar(learned_k4,mean(correl4_P'),std(correl4_P'),'gv-');
     errorbar(learned_k5,mean(correl5_P'),std(correl5_P'),'md-');
+    errorbar(learned_k6,mean(correl6_P'),std(correl6_P'),'c+-');
     
-    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast');
+    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal', 'neurogen-Mairal', 'location','SouthEast');
     ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
     
     
@@ -161,8 +166,9 @@ for T = 100 %300]
     errorbar(learned_k3,mean(err3'),std(err3'),'rs-'); 
     errorbar(learned_k4,mean(err4'),std(err4'),'gv-');
     errorbar(learned_k5,mean(err5'),std(err5'),'md-');
-    
-    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast');
+    errorbar(learned_k6,mean(err6'),std(err6'),'c+-');
+    %     
+    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','neurogen-Mairal','location','SouthEast');
     ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
     
     
@@ -172,7 +178,7 @@ for T = 100 %300]
      saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
      saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
-     close(gcf);     
+     close(gcf);
  
 %%
  

@@ -17,8 +17,11 @@ function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess
     if num_data_per_label ~= -1
         data_train = data_train(:, 1:(500/num_data_per_label):end);
     end
-    %     
     data_train = postprocess(data_train);
+%     
+% 
+% 
+% 
     % test data
     test = load(strcat(cifar_path, 'test.mat'));
     data_test = prepare_data_fr_raw(test, is_preprocess); clear test;

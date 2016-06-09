@@ -20,9 +20,10 @@ function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,
 
     % reset the ?past? information
     A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
-
-    [n1, n2]=size(data);
+% 
     batch_size = 20;
+%     
+    [n1, n2]=size(data);
     t_start=1;
     t_end=batch_size;
     t = 0; % iteration
@@ -42,12 +43,15 @@ function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,
         t_end = t_end + batch_size;
         %     
         % 1. neurogenesis step
+        % sahil: this is to account for the case of random dictionary. 
+        % in this case, we don't really learn. ideally, we should avoid
+        % such cases in this function.         
         if  new_elements < 0   % just use the initial dictionary
             D = D0;
         end
         % changed on 11/9
         % evaluate the current dictionary before adding random elements
-        %     
+        %
         tic;
         [code,err(t,:),correl] = sparse_coding(x,D,nonzero_frac,data_type);
         correl_S(t,:) = correl(1,:);
@@ -56,24 +60,32 @@ function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,
         pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
         fprintf('Number of seconds to do sparse coding was %f.\n', toc);    
         %          
+        % sahil: not doing any learning.        
         if new_elements <0 % initial dictionary    
             continue;
         end
         %  
         % neurogen version  
         if new_elements > 0  % include new dictionary columns
-            fprintf('Adding %d new elements.', new_elements);
-            D = [D normalize(rand(n,new_elements))]; 
-            B = [B zeros(n,new_elements)];
-            A = [A zeros(k,new_elements)];  
-            A = [A;zeros(new_elements,k+new_elements)];
-            % sahil: added code lines below to update C (C is not used currently except for debugging).
-            if ~isempty(C)
-            % display(new_elements);
-                C(k+1:k+new_elements, :) = 0;
-            end
-            % sahil code ends here.
-            k = k + new_elements;
+            % sahil: added a condition so that new elements are added only in the first batch and not the subsequent ones. 
+            % sahil: this is because new dictionary elements don't account for previous data for their learning. 
+            % sahil: So, data from the previous batches would be missed in the learning.
+%             if t == 1  %first batch
+                fprintf('Adding %d new elements.', new_elements);
+                D = [D normalize(rand(n,new_elements))]; 
+                B = [B zeros(n,new_elements)];
+                A = [A zeros(k,new_elements)];  
+                A = [A;zeros(new_elements,k+new_elements)];
+                % sahil: added code lines below to update C (C is not used currently except for debugging).
+                if ~isempty(C)
+                % display(new_elements);
+                    C(k+1:k+new_elements, :) = 0;
+                end
+                % sahil code ends here.
+                k = k + new_elements;
+%             else
+%                 fprintf('Not adding any elements in the subsequent batches (recent change by Sahil)');
+%             end
         end
         % 
         % 2. sparse coding step AFTER adding random elements,to use it in dict update for each element in the data batch

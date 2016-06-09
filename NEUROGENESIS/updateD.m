@@ -97,7 +97,6 @@ switch D_update_method
         end
     case 'Mairal'
         % sahil: this is the standard implementation of the pseudo code in Algo 2 in the paper Mairal et al.
-        % challenge is understanding why this algo should work.        
         converged = 0;
         while ~converged
             Dprev = D;
@@ -115,7 +114,6 @@ switch D_update_method
         end
     case 'GroupMairal'
         % sahil: this is the implementation of equation (11) in the group sparsity paper.
-        % sahil: important is how we come up with formulation exactly.
         converged = 0;  
         while ~converged
             Dprev = D;

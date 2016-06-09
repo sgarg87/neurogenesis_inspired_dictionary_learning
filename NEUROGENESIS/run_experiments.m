@@ -1,6 +1,7 @@
 function [new_elements,err0, correl0, learned_k0, err1, correl1, learned_k1, ...
     err2, correl2,learned_k2,err3, correl3, learned_k3, ...
-    err4, correl4, learned_k4, err5, correl5, learned_k5] = run_experiments(params)
+    err4, correl4, learned_k4, err5, correl5, learned_k5, ...
+    err6, correl6, learned_k6] = run_experiments(params)
 % 
 % what is n, k, t
 n = params.n;
@@ -62,18 +63,30 @@ if is_patches
     [train_data, test_data, n] = lena_patches(T);
 else
     % or real images itself (Sahil)
-    [train_data_map, test_data_map, n] = cifar_images_online(true, T);
-    % sea   
+%     if T > 100
+%         [train_data_map, test_data_map, n] = cifar_images_online(true, -1);
+%     else
+%         [train_data_map, test_data_map, n] = cifar_images_online(true, T);
+%     end
+    %     
+    % 
+    [train_data_map, test_data_map, n] = cifar_images_online(true, -1);
+    % sea images.
     train_data = train_data_map{72};
-    assert (size(train_data, 2) == T);
     test_data = test_data_map{72};
-    assert (size(test_data, 2) == T);
-    % each column is a data point.
-    data0 = train_data_map{89};
+    assert (size(train_data, 2) == T);    
+    test_data0 = test_data_map{90};
+    %     
+    [train_data_map, ~, n] = cifar_images_online(true, 100);
+    data0 = [];
+    for curr_ns_label = 89:93
+        data0 = [data0 train_data_map{curr_ns_label}];
+    end
     assert (size(data0, 2) == T);
-    test_data0 = test_data_map{89};
-    assert (size(test_data0, 2) == T);
 end
+% 
+% data0 = train_data; test_data0 = test_data;
+% 
 %%%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -135,6 +148,11 @@ fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for Mairal.\n');
 [D5,err55,correl55] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');
 
+fprintf('\n\n\n....................................')
+fprintf('Learning the dictionary model for neurogenesis with Mairal.\n');
+[D6,err66,correl66] =  DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal');
+
+
 %%%   legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast'); 
 
 % sahil updated the code (the last parameter) for adding suffix to plot names.
@@ -144,21 +162,22 @@ plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl
 % 
 % 
 % 
-% sahil added the code below for evaluating the model on test data.
-fprintf('Computing test error by computing sparse codings function ...\n');
-tic;
-[~,err00_test, correl00_test] = sparse_coding(test_data,D0,nonzero_frac,data_type); % random-D
-[~,err11_test, correl11_test] = sparse_coding(test_data,D1,nonzero_frac,data_type); % neurogen-group-Mairal
-[~,err22_test, correl22_test] = sparse_coding(test_data,D2,nonzero_frac,data_type); % neurogen-SG
-[~,err33_test, correl33_test] = sparse_coding(test_data,D3,nonzero_frac,data_type); % groupMairal 
-[~,err44_test, correl44_test] = sparse_coding(test_data,D4,nonzero_frac,data_type); % SG       
-[~,err55_test, correl55_test] = sparse_coding(test_data,D5,nonzero_frac,data_type); % Mairal 
-fprintf('Time to compute was %f.\n', toc);
-% sahil also added code line below to generate plots for evaluation on test
-% data. (note: the evaluation below this code line is for the other test
-% data which is non-stationary w.r.t. these data sets).
-fprintf('Generating plots for testing error.\n');
-plot_online_err(params,err00_test,correl00_test,err11_test,correl11_test,err22_test,correl22_test,err33_test,correl33_test,err44_test,correl44_test,err55_test,correl55_test, 'test'); 
+% sahil commented the code for now for fast experiments.
+% % sahil added the code below for evaluating the model on test data.
+% fprintf('Computing test error by computing sparse codings function ...\n');
+% tic;
+% [~,err00_test, correl00_test] = sparse_coding(test_data,D0,nonzero_frac,data_type); % random-D
+% [~,err11_test, correl11_test] = sparse_coding(test_data,D1,nonzero_frac,data_type); % neurogen-group-Mairal
+% [~,err22_test, correl22_test] = sparse_coding(test_data,D2,nonzero_frac,data_type); % neurogen-SG
+% [~,err33_test, correl33_test] = sparse_coding(test_data,D3,nonzero_frac,data_type); % groupMairal 
+% [~,err44_test, correl44_test] = sparse_coding(test_data,D4,nonzero_frac,data_type); % SG       
+% [~,err55_test, correl55_test] = sparse_coding(test_data,D5,nonzero_frac,data_type); % Mairal 
+% fprintf('Time to compute was %f.\n', toc);
+% % sahil also added code line below to generate plots for evaluation on test
+% % data. (note: the evaluation below this code line is for the other test
+% % data which is non-stationary w.r.t. these data sets).
+% fprintf('Generating plots for testing error.\n');
+% plot_online_err(params,err00_test,correl00_test,err11_test,correl11_test,err22_test,correl22_test,err33_test,correl33_test,err44_test,correl44_test,err55_test,correl55_test, 'test'); 
 % 
 % 
 % 
@@ -229,6 +248,10 @@ case 'nonstat'
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for Mairal.\n');
         [D5,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
+        %         
+        fprintf('\n\n\n....................................')
+        fprintf('Learning the dictionary model for neurogen with Mairal.\n');
+        [D6,err6,correl6] = DL(data0,D6,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal');   %neurogenesis
     end
 % 
     [C,err0,correl0] = sparse_coding(test_data0,D0,nonzero_frac,data_type); % random-D
@@ -237,7 +260,8 @@ case 'nonstat'
     [C,err3,correl3] = sparse_coding(test_data0,D3,nonzero_frac,data_type);    % groupMairal 
     [C,err4,correl4] = sparse_coding(test_data0,D4,nonzero_frac,data_type);    % SG       
     [C,err5,correl5] = sparse_coding(test_data0,D5,nonzero_frac,data_type);    % Mairal    
-end   
+    [C,err6,correl6] = sparse_coding(test_data0,D6,nonzero_frac,data_type);% neurogen-group-Mairal
+end
 % 
 % 
 % sahil add the two code lines below for generating plots on the
@@ -255,7 +279,8 @@ learned_k2 = size(D2,2);
 learned_k3 = size(D3,2);
 learned_k4 = size(D4,2);
 learned_k5 = size(D5,2);
-
+learned_k6 = size(D6,2);
+% 
 batch_size = 1; 
 max_iter = T/batch_size;
 % adult brain: link weights (dictionary) D1; 
