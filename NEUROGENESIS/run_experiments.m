@@ -68,13 +68,12 @@ else
 %     else
 %         [train_data_map, test_data_map, n] = cifar_images_online(true, T);
 %     end
-    %     
     % 
     [train_data_map, test_data_map, n] = cifar_images_online(true, -1);
     % sea images.
     train_data = train_data_map{72};
     test_data = test_data_map{72};
-    assert (size(train_data, 2) == T);    
+    assert (size(train_data, 2) == T);
     test_data0 = test_data_map{90};
     %     
     [train_data_map, ~, n] = cifar_images_online(true, 100);

@@ -36,7 +36,7 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.05, ...
+               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.20, ...
                'test_or_train','train','dataname','cifar100');
 
 params.adapt='basic'; %'adapt';
@@ -54,7 +54,7 @@ for tt=3:3
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
 for T = 500 %300]
     Ti = Ti + 1;
-    k_array = [25 50 100 150]; % 200 250 350 500 600]; %(n/2):(n/2):(4*n);
+    k_array = [5 10 15 20 25 35 45 50 55 60 75 85 100]; % 200 250 350 500 600]; %(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;
@@ -65,9 +65,9 @@ for T = 500 %300]
         params.n = n; 
         params.k = k; 
         params.T = T;
-        params.new_elements = 10; %floor(k/3); %floor(k/5); % floor(2*n*log10(k));  % the number of new elements added for each element;
+        params.new_elements = 1; %floor(k/3); %floor(k/5); % floor(2*n*log10(k));  % the number of new elements added for each element;
         %params.lambda_D = 1; % 'killing' weight parameter in l1/l2 regularization (need theory on how to set it asymptotically)
-   %     [new_elements,err0(ki,:),correl0(ki,:),learned_k0(ki), err1(ki,:),correl1(ki,:),learned_k1(ki), err2(ki,:),correl2(ki,:),learned_k2(ki),err3(ki,:), correl3(ki,:), learned_k3(ki)] = run_experiments(n,k,T);       
+   %     [new_elements,err0(ki,:),correl0(ki,:),learned_k0(ki), err1(ki,:),correl1(ki,:),learned_k1(ki), err2(ki,:),correl2(ki,:),learned_k2(ki),err3(ki,:), correl3(ki,:), learned_k3(ki)] = run_experiments(n,k,T);
         
          [new_elements,err0(ki,:),correl0,learned_k0(ki), ... 
                       err1(ki,:),correl1,learned_k1(ki), ...
@@ -128,8 +128,8 @@ for T = 500 %300]
     xlabel('initial dictionary size k');
     ylabel('learned dictionary size');
     % 
-    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
-    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
+    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+    saveas(gcf,sprintf('Figures/%s_%s_learn_k_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);
      
@@ -151,8 +151,8 @@ for T = 500 %300]
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
     ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
+     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+     saveas(gcf,sprintf('Figures/%s_%s_corr_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);     
      
@@ -175,8 +175,8 @@ for T = 500 %300]
     xlabel('final dictionary size k');
     ylabel('MSE');
     ylim([0,1]);    
-     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
-     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
+     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
+     saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
     %sahil added code closing the figure after the saving.    
      close(gcf);
  
@@ -185,3 +185,4 @@ for T = 500 %300]
 end
 
 end
+% 

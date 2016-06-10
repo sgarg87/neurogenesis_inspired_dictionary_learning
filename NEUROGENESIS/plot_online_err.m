@@ -47,7 +47,7 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     ylabel('MSE (true, predicted)');
     ylim([0,1]);    
     %sahil updated the code for adding the suffix parameter in the figure file names.
-    file_path = sprintf('Figures/online_%s_k%d_err_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix);
+    file_path = sprintf('Figures/online_%s_k%d_err_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix);
 %     display(file_path);
     saveas(gcf, file_path, 'fig');
     saveas(gcf, file_path, 'png');
@@ -71,8 +71,8 @@ function plot_online_err(params, err00,correl00,err11,correl11,err22,correl22,er
     ylabel('Pearson correlation (true, predicted)');
     ylim([0,1]);
     %sahil updated the code for adding the suffix parameter in the figure file names.      
-    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'fig');
-    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'png');
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'fig');
+    saveas(gcf,sprintf('Figures/online_%s_k%d_corr_n%d_nz%d_T%d_new%d%s__%s',params.dataname,params.k,params.n,1000*params.nonzero_frac,params.T,params.new_elements,params.adapt, suffix),'png');
     %sahil added code closing the figure after the saving.    
     close(gcf);
 end
