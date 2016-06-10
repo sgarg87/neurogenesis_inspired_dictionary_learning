@@ -33,9 +33,73 @@ function methods = get_list_of_methods_fr_experiments()
     methods.sg = true;
 end
 
-function initialize_model(methods)    
+function model = initialize_model(methods)
     dictionary_sizes = get_dictionary_size_list_fr_methods(methods);
-    assert(false);
+    rng(0);
+    %     
+    if methods.mairal
+        curr_dictionary_sizes = dictionary_sizes.mairal;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.mairal.D = D_init;
+    end
+    %
+    if methods.random
+        curr_dictionary_sizes = dictionary_sizes.random;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.random.D = D_init;
+    end
+    %
+    if methods.group_mairal
+        curr_dictionary_sizes = dictionary_sizes.group_mairal;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.group_mairal.D = D_init;
+    end
+    %
+    if methods.sg
+        curr_dictionary_sizes = dictionary_sizes.sg;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.sg.D = D_init;
+    end
+    %
+    if methods.neurogen_mairal
+        curr_dictionary_sizes = dictionary_sizes.neurogen_mairal;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.neurogen_mairal.D = D_init;
+    end
+    %
+    if methods.neurogen_sg
+        curr_dictionary_sizes = dictionary_sizes.neurogen_sg;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.neurogen_sg.D = D_init;
+    end
+    %
+    if methods.neurogen_group_mairal
+        curr_dictionary_sizes = dictionary_sizes.neurogen_group_mairal;
+        D_init = {};
+        for curr_k = curr_dictionary_sizes
+            D_init{curr_k} = normalize(rand(n,curr_k));            
+        end
+        model.neurogen_group_mairal.D = D_init;
+    end
+    %
     model.dictionary_sizes = dictionary_sizes;
     model.methods = methods;
 end
@@ -70,11 +134,6 @@ function dictionary_sizes = get_dictionary_size_list_fr_methods(methods)
     if methods.neurogen_group_mairal
         dictionary_sizes.neurogen_group_mairal = [25 50 100 150];
     end 
-end
-
-function D_init = initialize_dictionary(n, k)
-    rng(0);
-    D_init = normalize(rand(n,k));
 end
 
 function curr_eval_obj = create_evaluation_object(error, correlation)
