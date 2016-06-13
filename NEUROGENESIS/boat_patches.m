@@ -2,8 +2,8 @@ function [data0, test_data0] = boat_patches(T)
     I=double(imread('spams-matlab/data/boat.png'));
     % extract 8 x 8 patches or 16x 16
     %     
-%     X=im2col(I,[16 16],'sliding');
-    X=im2col(I,[32 32],'sliding');
+     X=im2col(I,[16 16],'sliding');
+%     X=im2col(I,[32 32],'sliding');
     %
     X = preprocess_data(X);
     %     

@@ -16,8 +16,6 @@ close all;
 % addpath '/gsa/yktgsa-p5/01/imaging/MlabTools/ElasticNet';
 addpath './ElasticNet';
 % 
-randn('seed', 0);
-rand('seed', 0);
 % 
 % n=256;%16x16 image.
 n=1024;%32x32 images 
@@ -36,7 +34,7 @@ Ti=0;
 %                'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.2, ...
 %                'test_or_train','train','dataname','lena');
 params = struct('n',n,'k',0,'T',0,'eta',0.1,'epsilon',1e-2,'D_update_method','Mairal','new_elements', 0, ...
-               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.002, ...
+               'lambda_D',0.03,'mu',0,'data_type','Gaussian', 'noise',5,'True_nonzero_frac',0.2,'nonzero_frac',0.01, ...
                'test_or_train','train','dataname','cifar100');
 
 params.adapt='basic'; %'adapt';
@@ -54,7 +52,7 @@ for tt=3:3
 % sahil updated T from 100 to "" for the experiments on real images (rather than patches from the images)
 for T = 500 %300]
     Ti = Ti + 1;
-    k_array = [5 10 15 20 25 35 45 50 55 60 75 85 100]; % 200 250 350 500 600]; %(n/2):(n/2):(4*n);
+    k_array = [5 10 15 20 25 35 50 75 100]; % 200 250 350 500 600]; %(n/2):(n/2):(4*n);
     ki = 0; err = []; correl = [];
     
 %     clear err0 correl0 learned_k0;clear err1 correl1 learned_k1;clear err2 correl2 learned_k2;

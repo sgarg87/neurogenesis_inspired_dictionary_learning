@@ -97,18 +97,18 @@ D_init = normalize(rand(n,k));
 % 
 % sahil: as mentioned above, this is a bug. just passing the fraction instead of the actual number of nonzeros in C.
 % sahil: commenting the code line below.
-% nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim. 
-
-% fixed-size dictionary (baseline method-SG and Mairal)  
-
+% nonzero_C = floor(n*nonzero_frac);  % size of compressed representation - fraction of nonzeros as compared to input dim.
+% 
+% fixed-size dictionary (baseline method-SG and Mairal)
+% 
 %legend('random-D','neurogenesis','fixed-size-SG','fixed-size-Mairal','location','SouthEast'); 
-
+% 
 % random-D: just use the D_init 
 % sahil: D_update_method value doesn't seem to be random in the scripts
 % main_batch and main_online.
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for random case.\n');
-[D0,err00,correl00] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method);
+[D0,A0, B0, err00,correl00] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method, [], []);
 
 %plot_online_err(params,err00,correl00,err11,correl11,err22,correl22,err33,correl33,err44,correl44,err55,correl55);
 
@@ -116,21 +116,21 @@ fprintf('Learning the dictionary model for random case.\n');
 %[D1,err11,correl11] =  DL_neurogen(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for neurogenesis with Group Mairal.\n');
-[D1,err11,correl11] =  DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');
+[D1,A1, B1,err11,correl11] =  DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal', [], []);
  
 
 % neurogenesis - with SG
 %[D2,err22,correl22] = DL_neurogen(train_data,D_init,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for neurogenesis with SG.\n');
-[D2,err22,correl22] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');
+[D2,A2, B2,err22,correl22] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG', [], []);
 
 
 % group-sparse coding (Bengio et al 2009)
 % sahil: no new dictionary elements but deleting existing elements
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for Group Mairal.\n');
-[D3,err33,correl33] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal');
+[D3,A3, B3,err33,correl33] = DL(train_data,D_init,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal', [], []);
 
 % sahil: discuss this also with Dr. Rish.
 %%  TO DEBUG: group Mairal with lambda_D = 0 does not seem to work properly
@@ -139,17 +139,17 @@ fprintf('Learning the dictionary model for Group Mairal.\n');
 %% fixed-size-SG
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for SG (no sparsity though).\n');
-[D4,err44,correl44] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  
+[D4,A4, B4,err44,correl44] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG', [], []);
 
 
 % fixed-size-Mairal
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for Mairal.\n');
-[D5,err55,correl55] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');
+[D5,A5, B5,err55,correl55] = DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal', [], []);
 
 fprintf('\n\n\n....................................')
 fprintf('Learning the dictionary model for neurogenesis with Mairal.\n');
-[D6,err66,correl66] =  DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal');
+[D6,A6, B6,err66,correl66] =  DL(train_data,D_init,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal', [], []);
 
 
 %%%   legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','location','SouthEast'); 
@@ -223,34 +223,34 @@ case 'nonstat'
     if is_update_dictionary_fr_nonstationary
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for Random.\n');
-         [D0,err0,correl0] = DL(data0,D0,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method); %random-D
+         [D0,~, ~, err0,correl0] = DL(data0,D0,nonzero_frac,0,mu,eta,epsilon,T,-1,data_type,D_update_method, A0, B0); %random-D
         %         
         %     [D1,err1,correl1] = DL_neurogen(data0,D1,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
         %     [D2,err2,correl2] = DL_neurogen(data0,D2,nonzero_C,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for neurogen with Group Mairal.\n');
-        [D1,err1,correl1] = DL(data0,D1,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal');   %neurogenesis
+        [D1,~, ~,err1,correl1] = DL(data0,D1,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'GroupMairal', A1, B1);   %neurogenesis
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for neurogen with SG.\n');
-        [D2,err2,correl2] = DL(data0,D2,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG');% neurogen-SG
+        [D2,~, ~,err2,correl2] = DL(data0,D2,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,'SG', A2, B2);% neurogen-SG
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for group Mairal.\n');
-        [D3,err3,correl3] = DL(data0,D3,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal'); %group Mairal
+        [D3,~, ~,err3,correl3] = DL(data0,D3,nonzero_frac,lambda_D,mu,eta,epsilon,T,0,data_type,'GroupMairal', A3, B3); %group Mairal
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for SG (no sparsity though).\n');
-        [D4,err4,correl4] = DL(data0,D4,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG');  % just SG
+        [D4,~, ~,err4,correl4] = DL(data0,D4,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'SG', A4, B4);  % just SG
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for Mairal.\n');
-        [D5,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal');  %fixed-size Mairal
+        [D5,~, ~,err5,correl5] = DL(data0,D5,nonzero_frac,0,mu,eta,epsilon,T,0,data_type,'Mairal', A5, B5);  %fixed-size Mairal
         %         
         fprintf('\n\n\n....................................')
         fprintf('Learning the dictionary model for neurogen with Mairal.\n');
-        [D6,err6,correl6] = DL(data0,D6,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal');   %neurogenesis
+        [D6,~, ~,err6,correl6] = DL(data0,D6,nonzero_frac,0,mu,eta,epsilon,T,new_elements,data_type,'Mairal', A6, B6);   %neurogenesis
     end
 % 
     [C,err0,correl0] = sparse_coding(test_data0,D0,nonzero_frac,data_type); % random-D

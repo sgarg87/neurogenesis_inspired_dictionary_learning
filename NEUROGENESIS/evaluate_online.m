@@ -185,47 +185,62 @@ end
 
 function model = adapt_model(model, train_data, params)
     methods = model.methods;
+    dictionary_sizes = model.dictionary_sizes;
     %
     if methods.random
-        D_init = model.random.D;
-        [D,~,~] = random(train_data, D_init, params);
-        model.random.D = D;
+        for curr_dict_size = dictionary_sizes.random
+            D_init = model.random.D{curr_dict_size};
+            [D,~,~] = random(train_data, D_init, params);
+            model.random.D{curr_dict_size} = D;            
+        end
     end
     %     
     if methods.mairal
-        D_init = model.mairal.D;
-        [D,~,~] = mairal(train_data, D_init, params);
-        model.mairal.D = D;
+        for curr_dict_size = dictionary_sizes.mairal
+            D_init = model.mairal.D{curr_dict_size};
+            [D,~,~] = mairal(train_data, D_init, params);
+            model.mairal.D{curr_dict_size} = D;
+        end
     end
     %
     if methods.group_mairal
-        D_init = model.group_mairal.D;
-        [D,~,~] = group_mairal(train_data, D_init, params);
-        model.group_mairal.D = D;
+        for curr_dict_size = dictionary_sizes.group_mairal
+            D_init = model.group_mairal.D{curr_dict_size};
+            [D,~,~] = group_mairal(train_data, D_init, params);
+            model.group_mairal.D{curr_dict_size} = D;
+        end
     end
     %     
     if methods.sg
-        D_init = model.sg.D;
-        [D,~,~] = sg(train_data, D_init, params);
-        model.sg.D = D;
+        for curr_dict_size = dictionary_sizes.sg
+            D_init = model.sg.D{curr_dict_size};
+            [D,~,~] = sg(train_data, D_init, params);
+            model.sg.D{curr_dict_size} = D;
+        end
     end
     %  
     if methods.neurogen_group_mairal
-        D_init = model.neurogen_group_mairal.D;
-        [D, ~, ~] = neurogen_group_mairal(train_data, D_init, params);
-        model.neurogen_group_mairal = D;
+        for curr_dict_size = dictionary_sizes.neurogen_group_mairal
+            D_init = model.neurogen_group_mairal.D{curr_dict_size};
+            [D, ~, ~] = neurogen_group_mairal(train_data, D_init, params);
+            model.neurogen_group_mairal.D{curr_dict_size} = D;
+        end
     end
     %
     if methods.neurogen_mairal
-        D_init = model.neurogen_mairal.D;
-        [D, ~, ~] = neurogen_mairal(train_data, D_init, params);
-        model.neurogen_mairal = D;
+        for curr_dict_size = dictionary_sizes.neurogen_mairal
+            D_init = model.neurogen_mairal.D{curr_dict_size};
+            [D, ~, ~] = neurogen_mairal(train_data, D_init, params);
+            model.neurogen_mairal.D{curr_dict_size} = D;
+        end
     end
     %
     if methods.neurogen_sg
-        D_init = model.neurogen_sg.D;
-        [D, ~, ~] = neurogen_sg(train_data, D_init, params);
-        model.neurogen_sg = D;
+        for curr_dict_size = dictionary_sizes.neurogen_sg
+            D_init = model.neurogen_sg.D{curr_dict_size};
+            [D, ~, ~] = neurogen_sg(train_data, D_init, params);
+            model.neurogen_sg.D{curr_dict_size} = D;
+        end
     end
 end
 

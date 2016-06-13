@@ -1,4 +1,4 @@
-function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,D_update_method)
+function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,new_elements,data_type,D_update_method, A, B)
     % 
     % learn a dictionary D, and a  sparse code C, for data
     % 
@@ -11,18 +11,24 @@ function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,
     % T  - number of iterations
     % new_elements - the  number of new dictionary elements to generate per each sample (if 0, no neurogen occuring)
     % data_type - 'Gaussian', or 'Bernoulli', or another exp-family
-
+    %
     n = size(D0,1);
     k = size(D0,2);
-
+    %
     D = D0;
     C = [];
-
+    %
     % reset the ?past? information
-    A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
-% 
+    assert((isempty(A) && isempty(B)) || ((~isempty(A)) && (~isempty(B))));
+    if isempty(A) && isempty(B)
+        A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
+    else
+        assert(size(A, 1) == k); assert(size(A, 2) == k);
+        assert(size(B, 1) == n); assert(size(B, 2) == k);
+    end
+    % 
     batch_size = 20;
-%     
+    %     
     [n1, n2]=size(data);
     t_start=1;
     t_end=batch_size;
@@ -118,6 +124,7 @@ function [D,err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsilon,T,
         [D,A,B] = updateD(D,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method, A,B, data_history,code_history) ;
         fprintf('Number of seconds to update the dictionary was %f.\n', toc);
         %    
+%         display(sum(abs(D)));
         [nzD,ind] = find(sum(abs(D)));
         % active neurons.    
         num_non_sparse_dictionary_elements = length(ind);

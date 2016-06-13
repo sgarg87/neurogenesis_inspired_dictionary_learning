@@ -1,5 +1,7 @@
 function  [D,A,B] = updateD(D_old,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method,A,B, data_history,code_history)
 
+is_sparse_dictionary = true;
+
 % update dictionary, given the current dictionary, sparse code, data and parameters
 
 % lambda_D - regularization parameter for optimizing the dictionary (weight on group l1/l2); 
@@ -13,9 +15,12 @@ n = size(D_old,1);
 k = size(D_old,2);
 D = D_old;
     
+num_nonzero_dict_element = floor(0.20*n);
+
 % 
 switch D_update_method
     case 'SG' %stochastic gradient with thresholding, i.e. proximal method
+%         assert(~is_sparse_dictionary);
 
 %%%%%%%%%%%%%%%%%%%%%% this modification  is NOT an SG approach - looks at ALL data
       %  x = data_history; 
@@ -33,7 +38,7 @@ switch D_update_method
 %max(max(D));
         % compute the step size eta for gradient step - use 1/L, where L is an upper bound on
         % the largest eigenvalue
- 
+%  
         [U,S,V] = svd(code*code');
         L = S(1,1)+0.01;
         eta = 1/L;
@@ -64,13 +69,13 @@ switch D_update_method
                     if ~nnz(D(:,j))  % all-zeros dictionary element - skip it 
                         continue;
                     end
-                    
+%                     
 %                     if ~nnz(D(:,j))
 %                         display 'all zeros dictionary element'
 %                         pause;
 %                     end
-                    
                     coef = 1-lambda_D/sqrt(D(:,j)'*D(:,j));
+                    %                     
                     if coef < 0
                         coef = 0;
                     end
@@ -101,13 +106,35 @@ switch D_update_method
         while ~converged
             Dprev = D;
             for j=1:k
+                %sahil changed the default assignment from 1 to a small episilon value.                 
                 if ~A(j,j)
-                    a = 1;
-                else a = A(j,j);
-                end 
-                u =  (B(:,j) - D*A(:,j))/a + D(:,j);
+                    a = 1e-30;
+                else
+                    a = A(j,j);
+                end
+                %                 
+                %% sahil corrected the mistake on A(j,j) vs a (introduced from the paper).                
+                u =  (B(:,j) - D*A(:,j)) + A(j,j)*D(:,j);
+                %                 
+                if ~is_sparse_dictionary
+                    u = u/a;
+                else
+                    if ~all(u == 0)
+                        u = lars(eye(n), u, 'lars', -num_nonzero_dict_element, 0);
+                        u = u(end,:)';
+                        assert(size(u, 1) == n); assert(size(u,2) == 1);
+                        u = u/a;                        
+                    end
+                    assert(~nnz(isnan(u)));
+                end
+                %                 
+%                 display(u');
+%                 display(a);
+                %                 
+                % check if u comes zero vector ? under what conditions ?       
                 D(:,j) = u*(1/max(1,sqrt(u'*u)));
             end
+            %             
             if max(max(abs(Dprev-D))) < epsilon
                 converged = 1;
             end 
@@ -122,8 +149,9 @@ switch D_update_method
                     continue;
                 end
             
+                %sahil changed the default assignment from 1 to a small episilon value.                 
                 if ~A(j,j)
-                    a = 1;
+                    a = 1e-30;
                 else
                     a = A(j,j);  
                 end
@@ -140,22 +168,55 @@ switch D_update_method
                     display 'zero norm of D_j' 
                 end
 %                 
-                coef = (1-lambda_D/sqrt(D(:,j)'*D(:,j)));
-                if isnan(coef)
-                    display 'nan coef';
-                end;
-%                 
-                if coef < 0
+                %% sahil: this doesn't seem right. it should be uj instead of D(:, j) here. 
+                %% another mistake here is that the soft thresholding should be done after the normalization with a. so did corresponding changes below.
+                %% this latter one is very interesting to discuss (mistake seems in the paper and not introduced in code). there is a nice interpretation
+                %% for this. That is, if there is high sparsity, deleting dictionary elements would be more difficult.                
+                %% sahil: so, commenting the line below and instead doing the soft thresholding in terms of uj.               
+                %% sahil also incorporate the conditional case of learning sparse dictionary elements.
+%                 coef = (1-lambda_D/sqrt(D(:,j)'*D(:,j)));
+%                 fprintf('norm of uj is %f.\n', sqrt((uj')*uj));
+%                 fprintf ('a is %f.\n', a);
+%                 fprintf('norm of uj/a is %f.\n', sqrt(((uj/a)')*(uj/a)));
+% 
+                if ~is_sparse_dictionary
+                    uj = uj/a;
+                else
+                    if ~all(uj == 0)
+                        uj = lars(eye(n), uj, 'lasso', -num_nonzero_dict_element, 0);
+                        uj = uj(end,:)';
+                        assert(size(uj, 1) == n); assert(size(uj,2) == 1);
+                        uj = uj/a;
+                    end
+                    assert(~nnz(isnan(uj)));
+                end
+                %
+                if is_sparse_dictionary
+                    uj_norm = sum(abs(uj));
+                else
+                    uj_norm = sqrt((uj')*uj);
+                end
+                %                 
+                if uj_norm == 0
                     coef = 0;
-                end  
-                
+                else
+                    coef = (1-lambda_D/uj_norm);
+                    assert(~isnan(coef));
+                    if coef < 0
+                        coef = 0;
+                    end  
+                end
+                %                
                 % soft thresholding: if the last element of dictionary, do
                 % not kill it
                 % if all other elements are zero already, or the dictionary
                 % has just 1 element already
                 d_old = D(:,j);
-            
-                D(:,j) = (1/a)*coef*uj;
+                %   
+                % sahil commented the line below and instead added the updated one with no normalization with a as it is done above already.                 
+%                 D(:,j) = (1/a)*coef*uj;
+                D(:,j) = coef*uj;
+                %                 
                 if ~nnz(sum(abs(D)))
                     D(:,j) = d_old;
                 end
@@ -164,7 +225,9 @@ switch D_update_method
               if nnz(isnan(D(:,j)))
                 display 'NaN in D';
               end
-
+              % sahil adding code here in regards to the norm of dictionary elements not being too large.
+              curr_dictionary_element_norm = sqrt(D(:,j)'*D(:,j));
+              D(:,j) = D(:,j)*(1/max(1,curr_dictionary_element_norm));
             end
 
             % sahil: commenting the line below as it should be printed only if debugging the code.            
