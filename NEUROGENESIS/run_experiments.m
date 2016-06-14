@@ -55,7 +55,7 @@ test_or_train = params.test_or_train;
  %%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%% real images %%%%%%%%%%%%%%%%%%%%%%
-is_patches = false;
+is_patches = true;
 % 
 if is_patches
      %real images (patches)

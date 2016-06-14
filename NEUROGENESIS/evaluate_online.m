@@ -1,12 +1,14 @@
 function evaluate_online()
     params = init_parameters();
     methods = get_list_of_methods_fr_experiments();
-    datasets_map = get_datasets_map(params.is_patch);    
-    %
-    % todo: do it for multiple values of k appropriately.
+    datasets_map = get_datasets_map(params.is_patch);
     model = initialize_model(methods);
-    model = adapt_model(model, datasets_map.data_nst_train, params);
-    model.evaluation = evaluate_model(model, test_data, params);
+    model.params = params;
+    model.methods = methods;
+    clear methods params;
+    % 
+    model = adapt_model(model, datasets_map.data_nst_train);
+    model.evaluation = evaluate_model(model, test_data);
     % todo: generate plots.
     % todo: also save the model and the evaluation.
 end
@@ -145,47 +147,73 @@ end
 function evaluation = evaluate_model(model, test_data, params)
     evaluation = struct();
     methods = model.methods;
+    dictionary_sizes = model.dictionary_sizes;
     %     
     if methods.random
-        D = model.random.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.random = create_evaluation_object(error, correlation);
+        evaluation.random = {};
+        % 
+        for curr_dict_size = dictionary_sizes.random
+            D = model.random.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.random{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
     %     
     if methods.mairal
-        D = model.mairal.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.mairal = create_evaluation_object(error, correlation);
+        evaluation.mairal = {};
+        % 
+        for curr_dict_size = dictionary_sizes.mairal
+            D = model.mairal.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.mairal{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
     %     
     if methods.group_mairal
-        D = model.group_mairal.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.group_mairal = create_evaluation_object(error, correlation);
+        evaluation.group_mairal = {};
+        % 
+        for curr_dict_size = dictionary_sizes.group_mairal
+            D = model.group_mairal.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.group_mairal{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
     %     
     if methods.sg
-        D = model.sg.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.sg = create_evaluation_object(error, correlation);
+        evaluation.sg = {};
+        % 
+        for curr_dict_size = dictionary_sizes.sg
+            D = model.sg.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.sg{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
     %     
     if methods.neurogen_group_mairal
-        D = model.neurogen_group_mairal.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.neurogen_group_mairal = create_evaluation_object(error, correlation);
+        evaluation.neurogen_group_mairal = {};
+        % 
+        for curr_dict_size = dictionary_sizes.neurogen_group_mairal
+            D = model.neurogen_group_mairal.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.neurogen_group_mairal{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
     %     
     if methods.neurogen_sg
-        D = model.neurogen_sg.D;
-        [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
-        evaluation.neurogen_sg = create_evaluation_object(error, correlation);
+        evaluation.neurogen_sg = {};
+        % 
+        for curr_dict_size = dictionary_sizes.neurogen_sg
+            D = model.neurogen_sg.D{curr_dict_size};
+            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac,params.data_type); % random-D
+            evaluation.neurogen_sg{curr_dict_size} = create_evaluation_object(error, correlation);
+        end
     end
 end
 
-function model = adapt_model(model, train_data, params)
+function model = adapt_model(model, train_data)
     methods = model.methods;
     dictionary_sizes = model.dictionary_sizes;
+    params = model.params;
     %
     if methods.random
         for curr_dict_size = dictionary_sizes.random
@@ -350,8 +378,8 @@ function params = init_parameters()
     params.is_patch = false;
 end
 
-function plot_dictionary_learned_size()
-    figure(1000+tt); hold on;
+function plot_dictionary_learned_size(model)    
+    close;
     plot(k_array,learned_k0,'k--',k_array,learned_k1,'bx-',k_array,learned_k2,'bo-',k_array,learned_k3,'rs-',...
         k_array,learned_k4,'gv-',k_array,learned_k5,'md-', k_array,learned_k6,'c+-');
     %     
@@ -366,19 +394,70 @@ function plot_dictionary_learned_size()
     close(gcf);
 end
 
-function plot_correlation()
+function [learned_dictionary_sizes, correlation, error] = post_process_results(evaluation, D, dictionary_sizes)
+    learned_dictionary_sizes = [];
+    correlation = [];
+    error = [];
+    % 
+    curr_idx = 0;
+    for curr_dict_size = dictionary_sizes
+        curr_idx = curr_idx + 1;
+        % 
+        curr_learned_dict_size = size(D{curr_dict_size}, 2);
+        learned_dictionary_sizes = [learned_dictionary_sizes; curr_learned_dict_size]
+        %
+        curr_evaluation = evaluation{curr_dict_size}
+        curr_correlation = curr_evaluation.correlation;
+        curr_error =  curr_evaluation.error;
+        clear curr_evaluation;
+        %
+        error(curr_idx, :) = curr_error;
+        correlation(curr_idx, :) = curr_correlation;
+    end
+end
+
+function plot_correlation(model)
+    params = model.params;
+    % 
     figure(tt+10000);
-    errorbar(learned_k0,mean(correl0_P'),std(correl0_P'),'k--');
     hold on;        
-    errorbar(learned_k1,mean(correl1_P'),std(correl1_P'),'bx-'); 
-    errorbar(learned_k2,mean(correl2_P'),std(correl2_P'),'bo-');  
-    errorbar(learned_k3,mean(correl3_P'),std(correl3_P'),'rs-'); 
-    errorbar(learned_k4,mean(correl4_P'),std(correl4_P'),'gv-');
-    errorbar(learned_k5,mean(correl5_P'),std(correl5_P'),'md-');
-    errorbar(learned_k6,mean(correl6_P'),std(correl6_P'),'c+-');
-    %
-    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal', 'neurogen-Mairal', 'location','SouthEast');
-    ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
+    % 
+    if model.methods.random
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.random, model.random.D, model.dictionary_sizes.random);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'k--', label='random-D');
+    end
+    % 
+    if model.methods.neurogen_group_mairal
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.neurogen_group_mairal, model.neurogen_group_mairal.D, model.dictionary_sizes.neurogen_group_mairal);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'bx-', label='neurogen-groupMairal');
+    end
+    % 
+    if model.methods.neurogen_sg
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.neurogen_sg, model.neurogen_sg.D, model.dictionary_sizes.neurogen_sg);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'bo-', label='neurogen-SG');
+    end
+    % 
+    if model.methods.group_mairal
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.group_mairal, model.group_mairal.D, model.dictionary_sizes.group_mairal);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'rs-', label='groupMairal');       
+    end
+    % 
+    if model.methods.sg
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.sg, model.sg.D, model.dictionary_sizes.sg);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'gv-', label='SG');              
+    end
+    % 
+    if model.methods.mairal
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.mairal, model.mairal.D, model.dictionary_sizes.mairal);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'md-', label='Mairal');
+    end
+    % 
+    if model.methods.neurogen_mairal
+        [learned_dictionary_sizes, correlation, error] = post_process_results(model.evaluation.neurogen_mairal, model.neurogen_mairal.D, model.dictionary_sizes.neurogen_mairal);
+        errorbar(learned_dictionary_sizes, mean(correlation'),std(correlation'),'c+-', label='neurogen-Mairal');        
+    end
+    % 
+    legend('location','SouthEast');
     %
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
@@ -388,70 +467,3 @@ function plot_correlation()
     close(gcf);     
 end
 
-function plot_error()
-    figure(tt+100);
-    errorbar(learned_k0,mean(err0'),std(err0'),'k--'); 
-    hold on;        
-    errorbar(learned_k1,mean(err1'),std(err1'),'bx-');
-    errorbar(learned_k2,mean(err2'),std(err2'),'bo-');  
-    errorbar(learned_k3,mean(err3'),std(err3'),'rs-'); 
-    errorbar(learned_k4,mean(err4'),std(err4'),'gv-');
-    errorbar(learned_k5,mean(err5'),std(err5'),'md-');
-    errorbar(learned_k6,mean(err6'),std(err6'),'c+-');
-    %
-    legend('random-D','neurogen-groupMairal','neurogen-SG','groupMairal','SG','Mairal','neurogen-Mairal','location','SouthEast');
-    ss = sprintf('%s: input dim n=%d, samples = %d',params.test_or_train,n,T); title(ss);
-    %
-    xlabel('final dictionary size k');
-    ylabel('MSE');
-    ylim([0,1]);
-    saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'fig');
-    saveas(gcf,sprintf('Figures/%s_%s_err_n%d_nz%d_T%d_new%d%s',params.dataname,params.test_or_train,params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt),'png');
-    close(gcf);
-end
-
-% function model = learn_model(train_data, D_init, methods, params)
-%     model = struct();
-%     model.methods = methods;
-%     if methods.random
-%         model.random = struct();        
-%         [D,~,~] = random(train_data, D_init, params);
-%         model.random.D = D;
-%     end
-%     %     
-%     if methods.mairal
-%         model.mairal = struct();        
-%         [D,~,~] = mairal(train_data, D_init, params);
-%         model.mairal.D = D;
-%     end
-%     %
-%     if methods.group_mairal
-%         model.group_mairal = struct();        
-%         [D,~,~] = group_mairal(train_data, D_init, params);
-%         model.group_mairal.D = D;
-%     end
-%     %     
-%     if methods.sg
-%         model.sg = struct();        
-%         [D,~,~] = sg(train_data, D_init, params);
-%         model.sg.D = D;
-%     end
-%     %  
-%     if methods.neurogen_group_mairal
-%         model.neurogen_group_mairal = struct();
-%         [D, ~, ~] = neurogen_group_mairal(train_data, D_init, params);
-%         model.neurogen_group_mairal = D;
-%     end
-%     %
-%     if methods.neurogen_mairal
-%         model.neurogen_mairal = struct();
-%         [D, ~, ~] = neurogen_mairal(train_data, D_init, params);
-%         model.neurogen_mairal = D;
-%     end
-%     %
-%     if methods.neurogen_sg
-%         model.neurogen_sg = struct();
-%         [D, ~, ~] = neurogen_sg(train_data, D_init, params);
-%         model.neurogen_sg = D;
-%     end
-% end

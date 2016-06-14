@@ -120,7 +120,7 @@ switch D_update_method
                     u = u/a;
                 else
                     if ~all(u == 0)
-                        u = lars(eye(n), u, 'lars', -num_nonzero_dict_element, 0);
+                        u = lars(eye(n), u, 'lars', -num_nonzero_dict_element, 1, eye(n));
                         u = u(end,:)';
                         assert(size(u, 1) == n); assert(size(u,2) == 1);
                         u = u/a;                        
@@ -174,7 +174,7 @@ switch D_update_method
                 %% for this. That is, if there is high sparsity, deleting dictionary elements would be more difficult.                
                 %% sahil: so, commenting the line below and instead doing the soft thresholding in terms of uj.               
                 %% sahil also incorporate the conditional case of learning sparse dictionary elements.
-%                 coef = (1-lambda_D/sqrt(D(:,j)'*D(:,j)));
+%%                 coef = (1-lambda_D/sqrt(D(:,j)'*D(:,j)));
 %                 fprintf('norm of uj is %f.\n', sqrt((uj')*uj));
 %                 fprintf ('a is %f.\n', a);
 %                 fprintf('norm of uj/a is %f.\n', sqrt(((uj/a)')*(uj/a)));
@@ -183,7 +183,7 @@ switch D_update_method
                     uj = uj/a;
                 else
                     if ~all(uj == 0)
-                        uj = lars(eye(n), uj, 'lasso', -num_nonzero_dict_element, 0);
+                        uj = lars(eye(n), uj, 'lars', -num_nonzero_dict_element, 1, eye(n));
                         uj = uj(end,:)';
                         assert(size(uj, 1) == n); assert(size(uj,2) == 1);
                         uj = uj/a;
