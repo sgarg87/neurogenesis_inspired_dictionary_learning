@@ -1,5 +1,7 @@
-function [train_data, test_data, n] = lena_patches(T)
-    I=double(imread('spams-matlab/data/lena.png'));
+function [train_data, test_data, n] = lena_patches(T, dir_path)
+    image_file_path = strcat(dir_path, 'spams-matlab/data/lena.png');
+% 
+    I=double(imread(image_file_path));
 %     
     X=im2col(I,[16 16],'sliding');
 %     X=im2col(I,[32 32],'sliding');
@@ -12,3 +14,4 @@ function [train_data, test_data, n] = lena_patches(T)
 
     test_data=X(:,s+T+100:s+2*T+100); %floor(size(X,2)/2):end);
     n = size(X,1);
+end

@@ -12,6 +12,8 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
     % new_elements - the  number of new dictionary elements to generate per each sample (if 0, no neurogen occuring)
     % data_type - 'Gaussian', or 'Bernoulli', or another exp-family
     %
+    %
+    %     
     n = size(D0,1);
     k = size(D0,2);
     %
@@ -26,9 +28,9 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
         assert(size(A, 1) == k); assert(size(A, 2) == k);
         assert(size(B, 1) == n); assert(size(B, 2) == k);
     end
-    % 
+    %
     batch_size = 20;
-    %     
+    %
     [n1, n2]=size(data);
     t_start=1;
     t_end=batch_size;
@@ -59,6 +61,8 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
         % evaluate the current dictionary before adding random elements
         %
         tic;
+        %        
+        %         
         [code,err(t,:),correl] = sparse_coding(x,D,nonzero_frac,data_type);
         correl_S(t,:) = correl(1,:);
         correl_P(t,:) = correl(2,:);
