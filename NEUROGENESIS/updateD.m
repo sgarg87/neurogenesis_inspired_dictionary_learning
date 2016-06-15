@@ -1,7 +1,14 @@
 function  [D,A,B] = updateD(D_old,code,x,lambda_D,mu,eta,epsilon,data_type,D_update_method,A,B, data_history,code_history)
-
-is_sparse_dictionary = false;
-
+% 
+n = size(D_old,1);
+% 
+is_sparse_dictionary = true;
+if is_sparse_dictionary
+    num_nonzero_dict_element = floor(0.01*n);
+else
+    num_nonzero_dict_element = [];
+end
+% 
 % update dictionary, given the current dictionary, sparse code, data and parameters
 
 % lambda_D - regularization parameter for optimizing the dictionary (weight on group l1/l2); 
@@ -11,11 +18,9 @@ is_sparse_dictionary = false;
 % D_update_method 
 % data_history   - all data so far
 
-n = size(D_old,1);
 k = size(D_old,2);
 D = D_old;
     
-num_nonzero_dict_element = floor(0.01*n);
 
 % 
 switch D_update_method
