@@ -4,7 +4,7 @@ n = size(D_old,1);
 % 
 is_sparse_dictionary = true;
 if is_sparse_dictionary
-    num_nonzero_dict_element = floor(0.01*n);
+    num_nonzero_dict_element = floor(0.0025*n);
 else
     num_nonzero_dict_element = [];
 end

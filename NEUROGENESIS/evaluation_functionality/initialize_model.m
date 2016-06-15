@@ -3,7 +3,7 @@ function model = initialize_model(dir_path)
     % 
     model.params = init_parameters();
     model.algorithms = get_list_of_algorithms_fr_experiments();
-    model.datasets_map = get_datasets_map(model.params.is_patch, model.params.T, dir_path);
+    model.datasets_map = get_datasets_map(model.params.is_patch, model.params.T, dir_path, model.params.n);
     %
     model.dictionary_sizes = get_dictionary_size_list_fr_algorithms(model.algorithms);
     rng(0);
