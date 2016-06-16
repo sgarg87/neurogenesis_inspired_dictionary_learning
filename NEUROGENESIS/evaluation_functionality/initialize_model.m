@@ -1,12 +1,15 @@
 function model = initialize_model(dir_path)
     model = struct();
-    % 
+    %
+    % setting seed zero for all random samplings.     
+%     rng(0);
+    %
+    %     
     model.params = init_parameters();
     model.algorithms = get_list_of_algorithms_fr_experiments();
     model.datasets_map = get_datasets_map(model.params.is_patch, model.params.T, dir_path, model.params.n);
     %
     model.dictionary_sizes = get_dictionary_size_list_fr_algorithms(model.algorithms);
-    rng(0);
     %     
     if model.algorithms.mairal
         curr_dictionary_sizes = model.dictionary_sizes.mairal;

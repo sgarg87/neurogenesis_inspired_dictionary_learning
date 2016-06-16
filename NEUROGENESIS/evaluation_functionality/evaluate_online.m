@@ -3,11 +3,16 @@
 % This is more flexible in terms of choosing which algorithms to evaluate
 % in the simulations (experiments).
 % 
-function evaluate_online(is_hpcc)
+function evaluate_online(is_hpcc, curr_core)
     dir_path = get_dir_path(is_hpcc);
     % 
     model = initialize_model(dir_path);
-    % 
+    %
+    if is_hpcc && (curr_core > 0)
+        params_objs = get_parameter_objs();
+        model.params = params_objs{curr_core};
+    end
+    %     
     model = adapt_model(model, model.datasets_map.data_st_train);
     model = adapt_model(model, model.datasets_map.data_nst_train);
     %     
@@ -15,5 +20,10 @@ function evaluate_online(is_hpcc)
     %
     plot_model_evaluation(model, dir_path);
     %
-    save(strcat(dir_path, 'model'), 'model');
+    model_path = 'model';
+    if is_hpcc && (curr_core > 0) 
+        model_path = model_path + num2str(curr_core);
+    end
+    save(strcat(dir_path, model_path), 'model');
 end
+

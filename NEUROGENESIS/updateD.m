@@ -159,8 +159,8 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                     if ~(D(:,j)'*D(:,j))
                         display 'zero norm of D_j' 
                     end
-                    %                 
-                    if ~is_sparse_dictionary
+                    %      
+                    if ~params.is_sparse_dictionary
                         uj = uj/a;
                     else
                         if ~all(uj == 0)
@@ -172,7 +172,7 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                         assert(~nnz(isnan(uj)));
                     end
                     %
-                    if is_sparse_dictionary
+                    if params.is_sparse_dictionary
                         uj_norm = sum(abs(uj));
                     else
                         uj_norm = sqrt((uj')*uj);
@@ -207,7 +207,7 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                   D(:,j) = D(:,j)*(1/max(1,curr_dictionary_element_norm));
                 end
                 % 
-                if max(max(abs(Dprev-D))) < epsilon
+                if max(max(abs(Dprev-D))) < params.epsilon
                     converged = 1;
                 end
             end
