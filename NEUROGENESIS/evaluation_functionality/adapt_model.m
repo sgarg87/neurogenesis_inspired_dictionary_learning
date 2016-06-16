@@ -92,21 +92,24 @@ function [D, A, B, error, correlation] = random_dummy(train_data, D_init, params
     % random-D: just use the D_init
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for random case.\n');
-    [D,A, B, error,correlation] = DL(train_data,D_init,params.nonzero_frac,0,params.mu,params.eta,params.epsilon,params.T,-1,params.data_type,'Mairal', A, B);
+    params.lambda_D = 0;
+    params.new_elements = -1;
+    [D,A, B, error,correlation] = DL(train_data,D_init, params, 'Mairal', A, B);
 end
 
 function [D, A, B, error, correlation] =  neurogen_group_mairal(train_data, D_init, params, A, B)
     %neurogenesis - with GroupMairal
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for neurogenesis with Group Mairal.\n');
-    [D, A, B,error,correlation] =  DL(train_data,D_init,params.nonzero_frac,params.lambda_D,params.mu,params.eta,params.epsilon,params.T,params.new_elements,params.data_type,'GroupMairal', A, B);
+    % 'GroupMairal'
+    [D,A, B, error,correlation] = DL(train_data,D_init, params, 'GroupMairal', A, B);
 end
 
 function [D, A, B, error, correlation] = neurogen_sg(train_data, D_init, params, A, B)
     % neurogenesis - with SG
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for neurogenesis with SG.\n');
-    [D, A, B, error,correlation] = DL(train_data,D_init,params.nonzero_frac,params.lambda_D,params.mu,params.eta,params.epsilon,params.T,params.new_elements,params.data_type,'SG', A, B);
+    [D,A, B, error,correlation] = DL(train_data, D_init, params, 'SG', A, B);
 end
 
 function [D, A, B, error, correlation] = group_mairal(train_data, D_init, params, A, B)
@@ -114,25 +117,31 @@ function [D, A, B, error, correlation] = group_mairal(train_data, D_init, params
     % group-sparse coding (Bengio et al 2009)
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for Group Mairal.\n');
-    [D, A, B,error,correlation] = DL(train_data,D_init,params.nonzero_frac,params.lambda_D,params.mu,params.eta,params.epsilon,params.T,0,params.data_type,'GroupMairal', A, B);
+    params.new_elements = 0;
+    [D,A, B, error,correlation] = DL(train_data,D_init, params, 'GroupMairal', A, B);
 end
 
 function [D, A, B, error, correlation] = sg(train_data, D_init, params, A, B)
     % fixed-size-SG
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for SG (no sparsity though).\n');
-    [D, A, B,error,correlation] = DL(train_data,D_init,params.nonzero_frac,0,params.mu,params.eta,params.epsilon,params.T,0,params.data_type,'SG', A, B);
+    params.lambda_D = 0;
+    params.new_elements = 0;
+    [D, A, B, error,correlation] = DL(train_data,D_init, params, 'SG', A, B);
 end
 
 function [D, A, B, error, correlation] = mairal(train_data, D_init, params, A, B)
     % fixed-size-Mairal
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for Mairal.\n');
-    [D, A, B,error,correlation] = DL(train_data,D_init,params.nonzero_frac,0,params.mu,params.eta,params.epsilon,params.T,0,params.data_type,'Mairal', A, B);
+    params.lambda_D = 0;
+    params.new_elements = 0;
+    [D,A, B, error,correlation] = DL(train_data, D_init, params, 'Mairal', A, B);
 end
 
 function [D, A, B, error, correlation] = neurogen_mairal(train_data, D_init, params, A, B)
     fprintf('\n\n\n....................................')
     fprintf('Learning the dictionary model for neurogenesis with Mairal.\n');
-    [D, A, B, error,correlation] =  DL(train_data,D_init,params.nonzero_frac,0,params.mu,params.eta,params.epsilon,params.T,params.new_elements,params.data_type,'Mairal', A, B);
+    params.lambda_D = 0;
+    [D,A, B, error,correlation] = DL(train_data,D_init, params, 'Mairal', A, B);
 end

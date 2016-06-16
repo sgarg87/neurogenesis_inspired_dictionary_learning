@@ -49,9 +49,7 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
         % 
         t_start=t_end+1;
         t_end = t_end + batch_size;
-        
-        
-             
+        %                      
         % 1. neurogenesis step
         % sahil: this is to account for the case of random dictionary. 
         % in this case, we don't really learn. ideally, we should avoid
@@ -79,18 +77,15 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
         %  
         % neurogen version 
         
-        %%
+        %% sahil commented this code block as it is exactly same computation happening above.
         % IR - changes for conditional neurogenesis 6/15
-        
-        % 1. first, sparse-code with old dictionary, keep the performance scores
-        [code,err(t,:),correl] = sparse_coding(x,D,nonzero_frac,data_type);
-        correl_S(t,:) = correl(1,:);
-        correl_P(t,:) = correl(2,:);
-     
-        pre_err = err; pre_correl = correl; 
-        pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
-        
-        
+        % % 1. first, sparse-code with old dictionary, keep the performance scores
+        % [code,err(t,:),correl] = sparse_coding(x,D,nonzero_frac,data_type);
+        % correl_S(t,:) = correl(1,:);
+        % correl_P(t,:) = correl(2,:);     
+        % pre_err = err; pre_correl = correl; 
+        % pre_correl_P(t,:)=correl(1,:); pre_correl_S(t,:)=correl(2,:);
+        % 
         if t > 1  & new_elements > 0  % if this is not the first iteration and neurogen should be happening (new_elements >0)
           % perform error check and increase or decrease neurogen     
           % if this new, 'test set' error on a new batch of samples is 'much'
@@ -99,12 +94,16 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
       
           %rel_err = (norm(pre_err(t,:))-norm(post_err(t-1,:)))/norm(post_err(t-1,:));
           rel_corr = mean(post_correl_P(t-1,:))-mean(pre_correl_P(t,:)); %/mean(post_correl_P(t,:)));
-          epsilon = 0.1;
+          % 
+          % sahil commented: epsilon is passed as a parameter above.
+          % epsilon = 0.1;
+          % 
           birth_rate=0;
           if  rel_corr > epsilon   %'generalization factor' : current test error vs. previous train error
                 % increase neurogen (unless depression factor is > 0 :)
                 birth_rate = 1;%1.5*(1+rel_corr);
           end
+          % 
           new_elements1 = floor(birth_rate*new_elements); % may play with increasing rate
               if new_elements1  % conditional addition of new elements
                 fprintf('Adding %d new elements.', new_elements1);
@@ -184,7 +183,7 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
                 C = C(ind, :);
                 % sahil code ends here.             
         end
-        %   change added for conditional neurogen -IR  
+        %   change added for conditional neurogen -IR
         [code,post_err(t,:),post_correl] = sparse_coding(x,D,nonzero_frac,data_type);
         post_correl_S(t,:) = post_correl(1,:);
         post_correl_P(t,:) = post_correl(2,:);
@@ -195,9 +194,8 @@ function [D,A, B, err,correl_all] = DL(data,D0,nonzero_frac,lambda_D,mu,eta,epsi
     err = reshape(err',1,er*ec);
 
     correl_all(1,:) = reshape(correl_P',1,er*ec);
-    correl_all(2,:) = reshape(correl_S',1,er*ec);
-    
-    
+    correl_all(2,:) = reshape(correl_S',1,er*ec);    
+    % 
     %err = mean(err')';
     %correl = mean(correl')';
 end
