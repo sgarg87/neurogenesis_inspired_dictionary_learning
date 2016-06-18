@@ -3,7 +3,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % D_update_method 
     % 
     n = size(D_old,1);
-    % 
+    %
     if params.is_sparse_dictionary
         num_nonzero_dict_element = floor(params.nz_in_dict*n);
 %         if num_nonzero_dict_element == 0
@@ -91,10 +91,10 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                         %B(:,j) = B(:,j)*coef;
                     end
 
-                    if max(max(abs(Dprev-D))) < epsilon
+                    if max(max(abs(Dprev-D))) < params.epsilon
                         converged = 1;
                     end   
-
+                    % 
                     %  let's normalize the dictionary - EM diverges, not a good idea
                     %%D = normalize(D);
             end

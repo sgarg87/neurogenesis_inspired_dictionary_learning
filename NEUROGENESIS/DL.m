@@ -67,7 +67,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
                     % generalization is bad), then increase neurogenesis rate
                     % rel_err = (norm(pre_err(t,:))-norm(post_err(t-1,:)))/norm(post_err(t-1,:));
                     rel_corr = mean(post_correl_P(t-1,:))-mean(pre_correl_P(t,:)); %/mean(post_correl_P(t,:)));
-                    if  rel_corr > params.epsilon   %'generalization factor' : current test error vs. previous train error
+                    if  rel_corr > params.errthresh   %'generalization factor' : current test error vs. previous train error
                         % increase neurogen (unless depression factor is > 0 :)
                         birth_rate = 1;%1.5*(1+rel_corr);
                     end

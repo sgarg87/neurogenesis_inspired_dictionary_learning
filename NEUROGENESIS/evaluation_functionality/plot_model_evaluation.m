@@ -13,7 +13,9 @@ function [learned_dictionary_sizes, correlation, error] = post_process_results(e
     for curr_dict_size = dictionary_sizes
         curr_idx = curr_idx + 1;
         % 
-        curr_learned_dict_size = size(D{curr_dict_size}, 2);
+        [~,nonzero_ind] = find(sum(abs(D{curr_dict_size})));
+        curr_learned_dict_size = length(nonzero_ind);
+        %     
         learned_dictionary_sizes = [learned_dictionary_sizes; curr_learned_dict_size];
         %
         curr_evaluation = evaluation{curr_dict_size};

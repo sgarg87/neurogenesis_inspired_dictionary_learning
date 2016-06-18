@@ -1,7 +1,7 @@
 function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     dictionary_sizes = struct();
     %
-    global_size = [5 10 15 20 25 50 75 100 150 200 350 500 750 1000 1500 2000 3500];
+    global_size = [5 10 15 20 25 50 75 100 150 200 350 500 750 1000 1500 2000];
     %
     if algorithms.mairal
         dictionary_sizes.mairal = [5 10 15 20 25 50 75 100 150 200 350 500 1000];
@@ -12,7 +12,7 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     end
     %
     if algorithms.group_mairal
-        dictionary_sizes.group_mairal = [5 10 15 20 25 50 75 100 150 200 350 500 750 1000 1500 2000 3500 5000 10000];
+        dictionary_sizes.group_mairal = [5 10 15 20 25 50 75 100 150 200 350 500 750 1000 1500 2000 3500 5000];
     end
     %
     if algorithms.sg
