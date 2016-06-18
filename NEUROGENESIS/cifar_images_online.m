@@ -9,10 +9,10 @@ function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess
     cifar_path = './Data/cifar-100-matlab/';
     %     
     % training data    
-    train = load(strcat(cifar_path, 'train.mat'));    
+    train = load(strcat(cifar_path, 'train.mat'));
     data_train = prepare_data_fr_raw(train, is_preprocess); clear train;
     num_pixels = size(data_train, 1);
-    assert (size(data_train, 2) == 50000);   
+    assert (size(data_train, 2) == 50000);
     %
     if num_data_per_label ~= -1
         data_train = data_train(:, 1:(500/num_data_per_label):end);
@@ -57,6 +57,7 @@ function data_train = prepare_data_fr_raw(train, is_preprocess)
     data_train = data_train(:, sort_idx);
     % preprocessing    
     if is_preprocess
+        data_train = double(data_train)/255;
         data_train = preprocess_data(data_train);
     end
 end

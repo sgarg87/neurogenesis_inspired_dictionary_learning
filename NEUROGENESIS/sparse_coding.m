@@ -4,16 +4,18 @@ function [C,err,correl] = sparse_coding(x,D,nonzero_frac)
     k = size(D,2);
     C = [];
     nonzeros_C = floor(size(D, 1)*nonzero_frac);
-    % 
+    %
     for i = 1:size(x,2)
         if nonzeros_C >= 0  % specified sparsity level
+            %% how important is to normalize the dictionary before learning the sparse codings and also the center of x.
+            %% not sure if the normalization and the centering being done along correct dimensions.
             D1 = normalize(D);
             y = center(x(:,i));
             betas = larsen(D1, y, lambda2_C, -nonzeros_C, 0);
             %         
             sol = betas(end,:)';
             assert(~nnz(isnan(sol)));
-            res = y-D1*sol; 
+            res = y-D1*sol;
             %         
             err(i) = res'*res;
             nonzeros(i) = nonzeros_C;

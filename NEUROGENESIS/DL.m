@@ -1,6 +1,12 @@
 function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
     % learn a dictionary D, and a  sparse code C, for data
-    % 
+    %
+    %     
+    display('xxxxxxxxxxxxxxxxxxxxx DL start xxxxxxxxxxxxxxxxxxxxxxxx');
+    fprintf('Initial number of dictionary elements is %d.\n', size(D0, 2));
+    display('.......................................................');
+    %
+    %     
     n = size(D0,1);
     k = size(D0,2);
     %
@@ -75,6 +81,8 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
             end
             % neurogen version
             if curr_new_elements > 0
+                %% not sure if the normalization being done on right dimensions.
+                %% is normalization really required here ?                
                 fprintf('Adding %d new elements.', curr_new_elements);
                 D = [D normalize(rand(n,curr_new_elements))];
                 B = [B zeros(n,curr_new_elements)];
@@ -85,15 +93,16 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
                     C(k+1:k+curr_new_elements, :) = 0;
                 end
                 k = k + curr_new_elements;
-                % sparse coding step AFTER adding random elements,to use it in dict update for each element in the data batch
-                tic;
-                [code, ~, ~] = sparse_coding(x,D,params.nonzero_frac);
-                fprintf('Number of seconds to do sparse coding was %f.\n', toc);
             end
         end
-        % 
+        %
+        % sparse coding step AFTER adding random elements,to use it in dict update for each element in the data batch
+        tic;
+        [code] = sparse_coding(x,D,params.nonzero_frac);
+        fprintf('Number of seconds to do sparse coding was %f.\n', toc);
+        %
         % matrices used by Mairal's dictionary update method     
-        A = A + code*code';  
+        A = A + code*code';
         B = B + x*code';
         %         
         C = [C code];
@@ -108,45 +117,68 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         % just in case, giving all previous data and current encoding to updateD
         % [code_history] = sparse_coding(data_history,D,nonzero_frac,data_type);
 %         code_history = [];
-        % 
-        % 
+        %
         tic;
-        [D, A, B] = updateD(D, code, x, params, D_update_method, A, B);
+        D = updateD(D, code, x, params, D_update_method, A, B);
         fprintf('Number of seconds to update the dictionary was %f.\n', toc);
-        [~,ind] = find(sum(abs(D)));
-        % active neurons.
-        num_non_sparse_dictionary_elements = length(ind);
-        % Number of non-sparse dictionary elements.
-        fprintf('Number of non-sparse dictionary elements are %d.\n', num_non_sparse_dictionary_elements);
-        clear num_non_sparse_dictionary_elements;
-        zero_idx = setdiff(1:size(D, 2), ind);
-        % 
-        if ~isempty(zero_idx)
-            display('The indices of the killed dictionary elements are:');
-            display(zero_idx);
-            clear zero_idx;
+        %
+        if (strcmp(D_update_method, 'GroupMairal')) || (strcmp(D_update_method, 'SG') && (params.lambda_D ~= 0))
+            [~,ind] = find(sum(abs(D)));
+            % active neurons.
+            num_non_sparse_dictionary_elements = length(ind);
+            % Number of non-sparse dictionary elements.
+            fprintf('Number of non-zero dictionary elements are %d.\n', num_non_sparse_dictionary_elements);
+            clear num_non_sparse_dictionary_elements;
+            zero_idx = setdiff(1:size(D, 2), ind);
+            % 
+            if ~isempty(zero_idx)
+                display('The indices of the killed dictionary elements are:');
+                display(zero_idx);
+                clear zero_idx;
+            else
+                display('No elements killed.')
+            end
+            %     
+            if isempty(ind)
+                display 'empty dictionary!'
+                pause;
+            else
+                    D = D(:,ind);
+                    B = B(:,ind);
+                    A = A(:,ind); A = A(ind,:);
+                    k = length(ind);
+                    %
+                    C = C(ind, :);
+            end
         else
-            display('No elements killed.')
+            % sahil added code block for random initialization of zero columns (non-group sparsity) 
+            % and then relearn (as suggested in Mairal 2009).
+            display('Random initialization of zero columns and then relearning.');
+            [~,zero_idx] = find(~sum(abs(D)));
+            if ~isempty(zero_idx)
+                D(:, zero_idx) = normalize(rand(n,length(zero_idx)));
+                A = A - code*code';
+                B = B - x*code';
+                [code] = sparse_coding(x,D,params.nonzero_frac);
+                A = A + code*code';
+                B = B + x*code';
+                D = updateD(D, code, x, params, D_update_method, A, B);
+            end
         end
-        %     
-        if isempty(ind)
-            display 'empty dictionary!'
-            pause;
-        else
-                D = D(:,ind);
-                B = B(:,ind);
-                A = A(:,ind); A = A(ind,:);
-                k = length(ind);
-                %
-                C = C(ind, :);
-        end
-        % 
+        %
         if params.is_conditional_neurogenesis
             [~,~,post_correl] = sparse_coding(x,D,params.nonzero_frac);
             post_correl_P(t,:) = post_correl(2,:);
         end
     end
-    % 
+    %
+    %
+    [~,ind] = find(sum(abs(D)));
+    display('.......................................................');
+    fprintf('Number of non-zero dictionary elements are %d.\n', length(ind));
+    display('xxxxxxxxxxxxxxxxxxxxxxx DL end xxxxxxxxxxxxxxxxxxxxxxxxxxx');
+    %
+    %
     [er,ec] = size(err);
     err = reshape(err',1,er*ec);
     % 

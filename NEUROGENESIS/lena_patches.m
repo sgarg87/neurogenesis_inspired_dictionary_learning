@@ -4,7 +4,8 @@ function [train_data, test_data, n] = lena_patches(T, dir_path, patch_size)
     I=double(imread(image_file_path));
     %     
     X=im2col(I,patch_size,'sliding');
-    %     
+    %
+    X = double(X)/255;
     X = preprocess_data(X);
     % 
     % s - starting point for taking patches

@@ -3,7 +3,6 @@ function model = initialize_model(dir_path)
     %
     % setting seed zero for all random samplings.     
 %     rng(0);
-    %
     %     
     model.params = init_parameters();
     model.algorithms = get_list_of_algorithms_fr_experiments();

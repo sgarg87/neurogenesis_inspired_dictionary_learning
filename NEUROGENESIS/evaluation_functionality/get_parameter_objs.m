@@ -5,8 +5,8 @@ function params_objs = get_parameter_objs()
     count = 0;
     params_objs = {};
     % 
-    for new_elements = [10 25]
-        for lambda_D = [0.003 0.01 0.03 0.1]
+    for new_elements = [100 250]
+        for lambda_D = [0.001 0.003 0.01 0.03]
 %             for nz_in_dict = [0.0025 0.005 0.01 0.025 0.05]
 %                 for nonzero_frac = [0.01 0.025 0.05 0.10]
                     count = count + 1;
@@ -22,6 +22,6 @@ function params_objs = get_parameter_objs()
 %             end
         end
     end
-    %     
+    %
     save('params_objs', 'params_objs');
 end

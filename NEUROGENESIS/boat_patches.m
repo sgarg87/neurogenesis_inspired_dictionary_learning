@@ -5,6 +5,7 @@ function [data0, test_data0] = boat_patches(T, dir_path, patch_size)
     %     
     X=im2col(I,patch_size,'sliding');
     %
+    X = double(X)/255;
     X = preprocess_data(X);
     %     
     % s - starting point for taking patches

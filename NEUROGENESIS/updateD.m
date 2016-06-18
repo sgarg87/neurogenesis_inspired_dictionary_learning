@@ -1,19 +1,14 @@
-function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
+function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % update dictionary, given the current dictionary, sparse code, data and parameters
     % D_update_method 
     % 
     n = size(D_old,1);
     % 
     if params.is_sparse_dictionary
-        num_nonzero_dict_element = params.nz_in_dict*n;
-        if num_nonzero_dict_element < 1
-            num_nonzero_dict_element = 1;
-        else
-            num_nonzero_dict_element = round(num_nonzero_dict_element);
-            if num_nonzero_dict_element > n
-                num_nonzero_dict_element = n;
-            end
-        end
+        num_nonzero_dict_element = floor(params.nz_in_dict*n);
+%         if num_nonzero_dict_element == 0
+%             num_nonzero_dict_element = 1;
+%         end
     else
         num_nonzero_dict_element = [];
     end
@@ -63,7 +58,7 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                             if ~D(jj,j) % zero element  - skip it
                                 continue;
                             end
-                            coef = 1 - mu/abs(D(jj,j));%  mu*abs(D(jj,j)); - does not look right, must be / not *
+                            coef = 1 - params.mu/abs(D(jj,j));%  mu*abs(D(jj,j)); - does not look right, must be / not *
                             if coef < 0 
                                 coef = 0;
                             end
@@ -109,7 +104,7 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                 Dprev = D;
                 for j=1:k
                     if ~A(j,j)
-                        a = 1e-30;
+                        a = 1e-100;
                     else
                         a = A(j,j);
                     end
@@ -144,7 +139,7 @@ function  [D,A,B] = updateD(D_old,code,x,params,D_update_method,A,B)
                         continue;
                     end
                     if ~A(j,j)
-                        a = 1e-30;
+                        a = 1e-100;
                     else
                         a = A(j,j);  
                     end

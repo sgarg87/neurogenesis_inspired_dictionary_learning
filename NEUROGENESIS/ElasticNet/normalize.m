@@ -7,4 +7,4 @@ function X = normalize_EN(X)
 
 [n p] = size(X);
 X = center(X);
-X = X./sqrt(ones(n,1)*sum(X.^2));
+X = X./(sqrt(ones(n,1)*sum(X.^2))+1e-100);
