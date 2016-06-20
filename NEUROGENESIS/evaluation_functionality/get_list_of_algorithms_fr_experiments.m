@@ -14,7 +14,7 @@ function algorithms = get_list_of_algorithms_fr_experiments()
     %     
     algorithms.mairal = true;
 %     algorithms.neurogen_mairal = true;
-%     algorithms.group_mairal = true;
+    algorithms.group_mairal = true;
     algorithms.neurogen_group_mairal = true;
     %     
 %     algorithms.random = true;

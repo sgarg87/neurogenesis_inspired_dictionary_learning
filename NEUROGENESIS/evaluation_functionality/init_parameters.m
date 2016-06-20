@@ -12,17 +12,28 @@ function params = init_parameters()
     params.noise = 5;  % not used right now, only in simulated data
     %
     params.T = 100;  % total number of iterations/data samples
-    params.new_elements = 10;  % new elements added per each batch of data
+    params.new_elements = 100;  % new elements added per each batch of data
     params.batch_size = 20;  % batch size
     % group sparsity
-    params.lambda_D = 0.03;
+    params.lambda_D = 0.001;
     % sparse codings
     params.nonzero_frac = 0.05; 
     % conditional neurogenesis related config.     
-    params.is_conditional_neurogenesis = true;
+    params.is_conditional_neurogenesis = false;
     params.errthresh = 0.5;
     % sparse columns (elements) in dictionary    
     params.is_sparse_dictionary = true;
     params.nz_in_dict = 0.01; % number of nonzeros in each dictionary element
     % params.True_nonzero_frac = 0.2;
+    %
+    params.is_reinitialize_dictionary_fixed_size = false;
+    %     
+    % initialization of the A, B matrices (prior brain memory)
+    params.is_init_A = true;
+    params.is_init_B = false;
+    params.A = 1e-3;
+    params.B = 1e-3;
+    %
+    %
+    params.is_nonzero_dict_element_in_learned_size = true;
 end

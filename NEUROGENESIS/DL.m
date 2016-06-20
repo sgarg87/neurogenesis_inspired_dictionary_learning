@@ -14,13 +14,20 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
     C = [];
     %
     % reset the ?past? information
-    assert((isempty(A) && isempty(B)) || ((~isempty(A)) && (~isempty(B))));
-    if isempty(A) && isempty(B)
-        A = zeros(k,k); B = zeros(n,k); % matrices used by Mairal's dictionary update method
+    %  
+    %     
+    if isempty(A)
+        A = zeros(k,k); % matrices used by Mairal's dictionary update method
     else
         assert(size(A, 1) == k); assert(size(A, 2) == k);
+    end
+    % 
+    if isempty(B)
+        B = zeros(n,k); % matrices used by Mairal's dictionary update method
+    else
         assert(size(B, 1) == n); assert(size(B, 2) == k);
     end
+    %     
     %     
     t_start=1;
     t_end=params.batch_size;
@@ -151,18 +158,20 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
                     C = C(ind, :);
             end
         else
-            % sahil added code block for random initialization of zero columns (non-group sparsity) 
-            % and then relearn (as suggested in Mairal 2009).
-            display('Random initialization of zero columns and then relearning.');
-            [~,zero_idx] = find(~sum(abs(D)));
-            if ~isempty(zero_idx)
-                D(:, zero_idx) = normalize(rand(n,length(zero_idx)));
-                A = A - code*code';
-                B = B - x*code';
-                [code] = sparse_coding(x,D,params.nonzero_frac);
-                A = A + code*code';
-                B = B + x*code';
-                D = updateD(D, code, x, params, D_update_method, A, B);
+            if params.is_reinitialize_dictionary_fixed_size
+                % sahil added code block for random initialization of zero columns (non-group sparsity) 
+                % and then relearn (as suggested in Mairal 2009).
+                display('Random initialization of zero columns and then relearning.');
+                [~,zero_idx] = find(~sum(abs(D)));
+                if ~isempty(zero_idx)
+                    D(:, zero_idx) = normalize(rand(n,length(zero_idx)));
+                    A = A - code*code';
+                    B = B - x*code';
+                    [code] = sparse_coding(x,D,params.nonzero_frac);
+                    A = A + code*code';
+                    B = B + x*code';
+                    D = updateD(D, code, x, params, D_update_method, A, B);
+                end
             end
         end
         %
