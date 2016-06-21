@@ -108,7 +108,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                     else
                         a = A(j,j);
                     end
-                    %                 
+                    %              
                     u =  (B(:,j) - D*A(:,j)) + A(j,j)*D(:,j);
                     %      
                     if ~params.is_sparse_dictionary
