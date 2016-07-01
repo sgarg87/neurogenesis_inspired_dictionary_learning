@@ -1,23 +1,26 @@
 function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % update dictionary, given the current dictionary, sparse code, data and parameters
-    % D_update_method 
-    % 
+    % D_update_method
+    %
+    % Sahil added code for sparse computations on dictionary.
+    % note: this would be inefficient for first iteration
+    % if the initialization of the dictionary is not sparse.
+    if ~issparse(D_old) && params.is_sparse_computations
+        D_old = sparse(D_old);
+    end
+    %     
     n = size(D_old,1);
     %
-    if params.is_sparse_dictionary
-        num_nonzero_dict_element = floor(params.nz_in_dict*n);
-%         if num_nonzero_dict_element == 0
-%             num_nonzero_dict_element = 1;
-%         end
-    else
-        num_nonzero_dict_element = [];
-    end
     % 
     k = size(D_old,2);
     D = D_old;
+    max_num_iter = 100;
     % 
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
+            if params.is_sparse_dictionary
+                warning('Sparse learning of dictionary elements is not implemented for SG method yet');
+            end
     %         assert(~is_sparse_dictionary);
 
     %%%%%%%%%%%%%%%%%%%%%% this modification  is NOT an SG approach - looks at ALL data
@@ -100,7 +103,14 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
             end
         case 'Mairal'
             converged = 0;
+            curr_count = 0;
+            %             
             while ~converged
+                curr_count = curr_count + 1;
+                if curr_count > max_num_iter
+                    break;
+                end
+                %                 
                 Dprev = D;
                 for j=1:k
                     if ~A(j,j)
@@ -115,24 +125,31 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                         u = u/a;
                     else
                         if ~all(u == 0)
-                            u = lars(eye(n), u, 'lars', -num_nonzero_dict_element, 1, eye(n));
-                            u = u(end,:)';
-                            assert(size(u, 1) == n); assert(size(u,2) == 1);
-                            u = u/a;                        
+                            u = sparsify_dictionary_element(u, params);
+                            u = u/a;
                         end
                         assert(~nnz(isnan(u)));
                     end
                     %
                     D(:,j) = u*(1/max(1,sqrt(u'*u)));
                 end
-                %             
-                if max(max(abs(Dprev-D))) < params.epsilon
+                %
+                max_diff = max(max(abs(Dprev-D)));
+                fprintf('max_diff: %f\n', max_diff);
+                if max_diff < params.epsilon
                     converged = 1;
                 end 
             end
         case 'GroupMairal'
-            converged = 0;  
+            converged = 0;
+            curr_count = 0;
+            %             
             while ~converged
+                curr_count = curr_count + 1;
+                if curr_count > max_num_iter
+                    break;
+                end
+                %                 
                 Dprev = D;
                 for j=1:k
                     if ~nnz(D(:,j))  % all-zeros dictionary element - skip it 
@@ -159,9 +176,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                         uj = uj/a;
                     else
                         if ~all(uj == 0)
-                            uj = lars(eye(n), uj, 'lars', -num_nonzero_dict_element, 1, eye(n));
-                            uj = uj(end,:)';
-                            assert(size(uj, 1) == n); assert(size(uj,2) == 1);
+                            uj = sparsify_dictionary_element(uj, params);
                             uj = uj/a;
                         end
                         assert(~nnz(isnan(uj)));
@@ -202,7 +217,9 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                   D(:,j) = D(:,j)*(1/max(1,curr_dictionary_element_norm));
                 end
                 % 
-                if max(max(abs(Dprev-D))) < params.epsilon
+                max_diff = max(max(abs(Dprev-D)));
+                fprintf('max_diff: %f\n', max_diff);
+                if max_diff < params.epsilon
                     converged = 1;
                 end
             end
@@ -210,6 +227,59 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
         if isempty(ind)
             display 'empty dictionary!'
             pause;
+        end
+    end
+    %
+    assert(issparse(D) || (~params.is_sparse_computations));
+end
+
+function u = sparsify_dictionary_element(u, params)
+    n = length(u); 
+    %   
+%     tic;
+    if strcmp(params.dictionary_element_sparse_algo, 'proximal')
+        num_nonzero_dict_element = floor(params.nz_in_dict*n);
+        dict_element_lam = binary_search_threshold(u, num_nonzero_dict_element);
+        u = sign(u).*max(abs(u)-dict_element_lam, 0);
+%         fprintf(' dnnz: %d, ', nnz(u));
+    elseif strcmp(params.dictionary_element_sparse_algo, 'lars')
+        num_nonzero_dict_element = floor(params.nz_in_dict*n);
+        u = lars(eye(n), u, 'lars', -num_nonzero_dict_element, 1, eye(n));
+        u = u(end,:)'; clear num_nonzero_dict_element;
+        assert(size(u, 1) == n); assert(size(u,2) == 1);
+    else
+        error('invalid algo specification for computing sparse dictionary element.')
+    end
+    %  
+%     compute_time = toc;
+%     if compute_time > 0.25
+%         fprintf('Time to compute a sparse, LARS based solution, was %f.\n', toc);
+%     end
+end
+
+function threshold = binary_search_threshold(u, num_nonzero_dict_element)
+%     fprintf('num_nonzero_dict_element: %d.\n', num_nonzero_dict_element);
+    % 
+    min_val = 0;
+    abs_u = abs(u);
+    max_val = max(abs_u);
+    %
+    while true
+        mean_val = (min_val+max_val)/2;
+        %
+        num_mean = nnz(max(abs_u-mean_val, 0));
+        %         
+%         fprintf('%d, ', num_mean);
+        %
+        if abs(num_mean-num_nonzero_dict_element) <= max(num_nonzero_dict_element*0.1, 10)
+            threshold = mean_val;
+            return;
+        elseif num_mean > num_nonzero_dict_element
+            min_val = mean_val;
+        elseif num_mean < num_nonzero_dict_element
+            max_val = mean_val;
+        else
+            error('This code block should not be executed. something wrong in the conditions above.\n');
         end
     end
 end

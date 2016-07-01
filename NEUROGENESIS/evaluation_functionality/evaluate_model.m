@@ -10,7 +10,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.random
             D = model.random.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.random{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -20,7 +20,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.mairal
             D = model.mairal.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac); 
+            [~,error,correlation] = sparse_coding(test_data,D,params); 
             evaluation.mairal{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -30,7 +30,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.group_mairal
             D = model.group_mairal.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.group_mairal{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -40,7 +40,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.sg
             D = model.sg.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.sg{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -50,7 +50,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.neurogen_group_mairal
             D = model.neurogen_group_mairal.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.neurogen_group_mairal{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -60,7 +60,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.neurogen_sg
             D = model.neurogen_sg.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.neurogen_sg{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end
@@ -70,7 +70,7 @@ function evaluation = evaluate_model(model)
         % 
         for curr_dict_size = dictionary_sizes.neurogen_mairal
             D = model.neurogen_mairal.D{curr_dict_size};
-            [~,error,correlation] = sparse_coding(test_data,D,params.nonzero_frac);
+            [~,error,correlation] = sparse_coding(test_data,D,params);
             evaluation.neurogen_mairal{curr_dict_size} = create_evaluation_object(error, correlation);
         end
     end

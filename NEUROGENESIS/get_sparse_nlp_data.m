@@ -1,0 +1,34 @@
+function [ train_data_1, test_data_1, train_data_2, test_data_2 ] = get_sparse_nlp_data()
+    load('data_adjacency_matrix_bio_economics.mat');
+%     load('data_adjacency_matrix.mat');
+%     
+% 
+    data2 = data_adjacency_matrix(:, 1:2000);
+    data1 = data_adjacency_matrix(:, 15001:17000);
+    train_data_1 = data1(:, 1:2:end);
+    test_data_1 = data1(:, 2:2:end);
+    clear data1;
+    %     
+    train_data_2 = data2(:, 1:2:end);
+    test_data_2 = data2(:, 2:2:end);
+    clear data2;
+% 
+% 
+% 
+    %     
+%     data_adjacency_matrix = data_adjacency_matrix(1:3:3*5000, :);
+%     data_adjacency_matrix = data_adjacency_matrix(1:16:16*1024, :);
+    %
+%     data_adjacency_matrix = data_adjacency_matrix(:, sum(data_adjacency_matrix) ~= 0);
+%     %     
+%     data2 = data_adjacency_matrix(:, 1:6000);
+%     data1 = data_adjacency_matrix(:, 6001:12000);
+%     %
+%     train_data_1 = data1(:, 1:20:end);
+%     test_data_1 = data1(:, 2:20:end);
+%     clear data1;
+%     %     
+%     train_data_2 = data2(:, 1:20:end);
+%     test_data_2 = data2(:, 2:20:end);
+%     clear data2;
+end

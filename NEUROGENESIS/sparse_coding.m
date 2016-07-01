@@ -1,6 +1,17 @@
-function [C,err,correl] = sparse_coding(x,D,nonzero_frac)
+function [C,err,correl] = sparse_coding(x,D, params)
     % learn sparse code C for a given data and a given dictionary D using LARS-EN.
-    lambda2_C = 0.00001; %0;  % LASSO
+    %
+    %
+    if params.is_sparse_computations
+        if ~issparse(D)
+            D = sparse(D);
+        end
+    end
+    %     
+    %     
+    nonzero_frac = params.nonzero_frac;
+    lambda2_C = params.lambda2_C;
+    %    
     k = size(D,2);
     C = [];
     nonzeros_C = floor(size(D, 1)*nonzero_frac);
@@ -12,11 +23,9 @@ function [C,err,correl] = sparse_coding(x,D,nonzero_frac)
             D1 = normalize(D);
             y = center(x(:,i));
             betas = larsen(D1, y, lambda2_C, -nonzeros_C, 0);
-            %         
             sol = betas(end,:)';
             assert(~nnz(isnan(sol)));
             res = y-D1*sol;
-            %         
             err(i) = res'*res;
             nonzeros(i) = nonzeros_C;
         else
@@ -35,4 +44,10 @@ function [C,err,correl] = sparse_coding(x,D,nonzero_frac)
         assert(~nnz(isnan(C)));
     end
     correl = [correl_Spearman; correl_Pearson];
+    %
+    if params.is_sparse_computations
+        if ~issparse(C)
+            C = sparse(C);
+        end
+    end
 end

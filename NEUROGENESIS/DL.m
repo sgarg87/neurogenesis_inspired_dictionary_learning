@@ -1,10 +1,15 @@
 function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
+    % rename to DL.m
     % learn a dictionary D, and a  sparse code C, for data
     %
-    %     
     display('xxxxxxxxxxxxxxxxxxxxx DL start xxxxxxxxxxxxxxxxxxxxxxxx');
     fprintf('Initial number of dictionary elements is %d.\n', size(D0, 2));
     display('.......................................................');
+    %
+    %
+%     if ~issparse(data) && params.is_sparse_computations
+%         data = sparse(data);
+%     end
     %
     %     
     n = size(D0,1);
@@ -53,7 +58,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         end
         % evaluate the current dictionary before adding random elements
         tic;
-        [code,err(t,:),correl] = sparse_coding(x,D,params.nonzero_frac);
+        [code,err(t,:),correl] = sparse_coding(x,D,params);
         correl_S(t,:) = correl(1,:);
         correl_P(t,:) = correl(2,:);
         pre_err = err; pre_correl = correl; 
@@ -95,18 +100,19 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
                 B = [B zeros(n,curr_new_elements)];
                 A = [A zeros(k,curr_new_elements)];  
                 A = [A;zeros(curr_new_elements,k+curr_new_elements)];
-                %                 
+                %
                 if ~isempty(C)
                     C(k+1:k+curr_new_elements, :) = 0;
                 end
                 k = k + curr_new_elements;
+                %                 
+                % sparse coding step AFTER adding random elements,to use it in dict update for each element in the data batch
+                tic;
+                [code] = sparse_coding(x,D,params);
+                fprintf('Number of seconds to do sparse coding was %f.\n', toc);
             end
         end
         %
-        % sparse coding step AFTER adding random elements,to use it in dict update for each element in the data batch
-        tic;
-        [code] = sparse_coding(x,D,params.nonzero_frac);
-        fprintf('Number of seconds to do sparse coding was %f.\n', toc);
         %
         % matrices used by Mairal's dictionary update method     
         A = A + code*code';
@@ -127,6 +133,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         %
         tic;
         D = updateD(D, code, x, params, D_update_method, A, B);
+        %         
         fprintf('Number of seconds to update the dictionary was %f.\n', toc);
         %
         if (strcmp(D_update_method, 'GroupMairal')) || (strcmp(D_update_method, 'SG') && (params.lambda_D ~= 0))
@@ -167,7 +174,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
                     D(:, zero_idx) = normalize(rand(n,length(zero_idx)));
                     A = A - code*code';
                     B = B - x*code';
-                    [code] = sparse_coding(x,D,params.nonzero_frac);
+                    [code] = sparse_coding(x,D,params);
                     A = A + code*code';
                     B = B + x*code';
                     D = updateD(D, code, x, params, D_update_method, A, B);
@@ -176,7 +183,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         end
         %
         if params.is_conditional_neurogenesis
-            [~,~,post_correl] = sparse_coding(x,D,params.nonzero_frac);
+            [~,~,post_correl] = sparse_coding(x,D,params);
             post_correl_P(t,:) = post_correl(2,:);
         end
     end

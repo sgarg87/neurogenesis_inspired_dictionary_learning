@@ -54,7 +54,17 @@ end
 
 %% LARS variable setup
 [n p] = size(X);
+% 
+% number of max. iterations
 nvars = min(n-1,p); % 
+% 
+% sahil added the code block below (June 28, 2016) for reducing max.
+% iterations
+% if abs(stop) ~= 0
+%     nvars = min(nvars, abs(stop)); % 
+% end
+% 
+% 
 maxk = 8*nvars; % Maximum number of iterations
 
 if stop == 0

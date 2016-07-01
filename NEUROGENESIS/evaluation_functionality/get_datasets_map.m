@@ -1,8 +1,14 @@
-function [datasets_map] = get_datasets_map(is_patches, T, dir_path, input_dim)
-    if is_patches
+function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim)
+    if strcmp(data_set_name, 'patch')
         [train_data, test_data, data0, test_data0] = get_patches_data(T, dir_path, input_dim);
-    else
+    elseif strcmp(data_set_name, 'cifar')
         [train_data, test_data, data0, test_data0] = get_cifar_data(T, dir_path, input_dim);
+    elseif strcmp(data_set_name, 'synthetic')
+        [train_data, test_data, data0, test_data0] = synthetic_sparse_data(input_dim, T, T);
+    elseif strcmp(data_set_name, 'nlp')
+        [train_data, test_data, data0, test_data0] = get_sparse_nlp_data();
+    else
+        error('no such data set');
     end
     %
     datasets_map = struct();

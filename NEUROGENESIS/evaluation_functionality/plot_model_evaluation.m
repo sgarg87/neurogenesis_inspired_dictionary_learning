@@ -100,7 +100,7 @@ function plot_correlation(model, dir_path)
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
     ylim([0,1]);    
-    curr_path = strcat(dir_path, sprintf('Figures/correlation_n%d_nz%d_T%d_new%d%s',params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt));
+    curr_path = strcat(dir_path, sprintf('Figures/correlation_n%d_T%d_new%d%s',params.n,params.T,params.new_elements,params.adapt));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
@@ -169,7 +169,7 @@ function plot_learned_dictionary_size(model, dir_path)
     %
     xlabel('initial dictionary size k');
     ylabel('learned dictionary size');
-    curr_path = strcat(dir_path, sprintf('Figures/learnedk_n%d_nz%d_T%d_new%d%s',params.n,100*params.nonzero_frac,params.T,params.new_elements,params.adapt));
+    curr_path = strcat(dir_path, sprintf('Figures/learnedk_n%d_T%d_new%d%s',params.n,params.T,params.new_elements,params.adapt));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
