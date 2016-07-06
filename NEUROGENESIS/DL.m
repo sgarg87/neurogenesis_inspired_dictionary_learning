@@ -134,7 +134,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         tic;
         D = updateD(D, code, x, params, D_update_method, A, B);
         %         
-        fprintf('Number of seconds to update the dictionary was %f.\n', toc);
+        fprintf('\nNumber of seconds to update the dictionary was %f.\n', toc);
         %
         if (strcmp(D_update_method, 'GroupMairal')) || (strcmp(D_update_method, 'SG') && (params.lambda_D ~= 0))
             [~,ind] = find(sum(abs(D)));

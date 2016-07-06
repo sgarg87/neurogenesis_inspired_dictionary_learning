@@ -135,7 +135,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                 end
                 %
                 max_diff = max(max(abs(Dprev-D)));
-                fprintf('max_diff: %f\n', max_diff);
+                fprintf('\nmax_diff: %f', max_diff);
                 if max_diff < params.epsilon
                     converged = 1;
                 end 
@@ -218,7 +218,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                 end
                 % 
                 max_diff = max(max(abs(Dprev-D)));
-                fprintf('max_diff: %f\n', max_diff);
+                fprintf('\nmax_diff: %f', max_diff);
                 if max_diff < params.epsilon
                     converged = 1;
                 end
@@ -239,8 +239,10 @@ function u = sparsify_dictionary_element(u, params)
 %     tic;
     if strcmp(params.dictionary_element_sparse_algo, 'proximal')
         num_nonzero_dict_element = floor(params.nz_in_dict*n);
-        dict_element_lam = binary_search_threshold(u, num_nonzero_dict_element);
-        u = sign(u).*max(abs(u)-dict_element_lam, 0);
+        if num_nonzero_dict_element < n
+            dict_element_lam = binary_search_proximal_threshold(u, num_nonzero_dict_element, max(0.01*num_nonzero_dict_element, 1));
+            u = sign(u).*max(abs(u)-dict_element_lam, 0);
+        end
 %         fprintf(' dnnz: %d, ', nnz(u));
     elseif strcmp(params.dictionary_element_sparse_algo, 'lars')
         num_nonzero_dict_element = floor(params.nz_in_dict*n);
@@ -255,31 +257,4 @@ function u = sparsify_dictionary_element(u, params)
 %     if compute_time > 0.25
 %         fprintf('Time to compute a sparse, LARS based solution, was %f.\n', toc);
 %     end
-end
-
-function threshold = binary_search_threshold(u, num_nonzero_dict_element)
-%     fprintf('num_nonzero_dict_element: %d.\n', num_nonzero_dict_element);
-    % 
-    min_val = 0;
-    abs_u = abs(u);
-    max_val = max(abs_u);
-    %
-    while true
-        mean_val = (min_val+max_val)/2;
-        %
-        num_mean = nnz(max(abs_u-mean_val, 0));
-        %         
-%         fprintf('%d, ', num_mean);
-        %
-        if abs(num_mean-num_nonzero_dict_element) <= max(num_nonzero_dict_element*0.1, 10)
-            threshold = mean_val;
-            return;
-        elseif num_mean > num_nonzero_dict_element
-            min_val = mean_val;
-        elseif num_mean < num_nonzero_dict_element
-            max_val = mean_val;
-        else
-            error('This code block should not be executed. something wrong in the conditions above.\n');
-        end
-    end
 end

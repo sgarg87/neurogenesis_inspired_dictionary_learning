@@ -16,6 +16,8 @@ function evaluate_online(is_hpcc, curr_core)
     end
     %     
     model = adapt_model(model, model.datasets_map.data_st_train);
+    save(strcat(dir_path, 'old_model'), 'model');
+    %     
     model = adapt_model(model, model.datasets_map.data_nst_train);
     %     
     model.evaluation = evaluate_model(model);

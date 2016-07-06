@@ -1,10 +1,11 @@
 function [ train_data_1, test_data_1, train_data_2, test_data_2 ] = get_sparse_nlp_data()
-    load('data_adjacency_matrix_bio_economics.mat');
-%     load('data_adjacency_matrix.mat');
+    load('data_adjacency_matrix_bio_economics_selected.mat');
+    data_adjacency_matrix = data_adjacency_matrix_selected;
+    clear data_adjacency_matrix_selected;
 %     
 % 
-    data2 = data_adjacency_matrix(:, 1:2000);
-    data1 = data_adjacency_matrix(:, 15001:17000);
+    data2 = data_adjacency_matrix(:, 1:4000);
+    data1 = data_adjacency_matrix(:, 10501:14500);
     train_data_1 = data1(:, 1:2:end);
     test_data_1 = data1(:, 2:2:end);
     clear data1;
