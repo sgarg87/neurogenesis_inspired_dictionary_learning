@@ -1,4 +1,4 @@
-function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess, num_data_per_label)
+function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess, num_data_per_label, dir_path)
     %
     if num_data_per_label ~= -1
         assert (num_data_per_label >= 1);
@@ -7,6 +7,7 @@ function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess
     end
     %     
     cifar_path = './Data/cifar-100-matlab/';
+    cifar_path = strcat(dir_path, cifar_path);
     %     
     % training data    
     train = load(strcat(cifar_path, 'train.mat'));

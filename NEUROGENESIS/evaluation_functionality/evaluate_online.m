@@ -14,7 +14,8 @@ function evaluate_online(is_hpcc, curr_core)
     elseif is_hpcc
         model.params = get_parameter_obj_hpcc();
     end
-    %     
+    %
+    %
     model = adapt_model(model, model.datasets_map.data_st_train);
     save(strcat(dir_path, 'old_model'), 'model');
     %     
@@ -30,4 +31,3 @@ function evaluate_online(is_hpcc, curr_core)
     end
     save(strcat(dir_path, model_path), 'model');
 end
-

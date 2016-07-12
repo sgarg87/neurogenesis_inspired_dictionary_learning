@@ -14,7 +14,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % 
     k = size(D_old,2);
     D = D_old;
-    max_num_iter = 100;
+    max_num_iter = min(0.2*n, 200);
     % 
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method

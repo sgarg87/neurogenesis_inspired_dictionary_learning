@@ -14,6 +14,7 @@ function [C,err,correl] = sparse_coding(x,D, params)
     k = size(D,2);
     C = [];
     nonzeros_C = floor(size(D, 1)*nonzero_frac);
+    assert(nonzeros_C > 0);
     %
     for i = 1:size(x,2)
         if nonzeros_C >= 0  % specified sparsity level

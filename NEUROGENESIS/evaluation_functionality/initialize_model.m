@@ -8,6 +8,17 @@ function model = initialize_model(dir_path)
     model.algorithms = get_list_of_algorithms_fr_experiments();
     model.datasets_map = get_datasets_map(model.params.data_set_name, model.params.T, dir_path, model.params.n);
     %
+    if model.params.is_patch_encoding
+        model.patches_data = get_patches(model.datasets_map, model.params.patch_size);
+        model.patches_params = init_patch_dictionary_learning_params(model.params, size(model.patches_data.train, 1), size(model.patches_data.train, 2));
+        model.patches_D = learn_patch_dictionary(model.patches_data.train, model.patches_params);
+        model.patches_test_correlation = evaluate_patches_dictionary(model.patches_D, model.patches_data.test(:, 1:100:end), model.patches_params);
+        model.datasets_map = get_patch_coding_fr_data(model.datasets_map, model.patches_D, model.patches_params, model.params.patch_size);
+        model.params.n = size(model.datasets_map.data_nst_test, 1);
+        save(strcat(dir_path, 'model_wd_patches'), 'model');
+    end
+    %
+    %     
     model.dictionary_sizes = get_dictionary_size_list_fr_algorithms(model.algorithms);
     %     
     if model.algorithms.mairal
