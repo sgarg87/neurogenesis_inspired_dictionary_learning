@@ -1,64 +1,62 @@
-function [data_train, data_test, num_pixels] = flower_building_images_online(is_preprocess, num_data_per_label, dir_path)
+function [flowers_data, oxford_data] = flower_building_images_online(num_data_per_label, dir_path, image_size)
+    flower_dir_path = strcat(dir_path, '../../data/image data in use/data set 1/all_data_sets/');
+    flower_image_files = dir(strcat(flower_dir_path, '*.jpg'));
+    flower_image_files = flower_image_files(randperm(length(flower_image_files)));
+    flower_image_files = flower_image_files(1:num_data_per_label);
+    flowers_data = process_image_files(flower_dir_path, flower_image_files, image_size, dir_path);
+    clear flower_dir_path flower_image_files;
+%     flowers_data = add_noise(flowers_data);
     %
-    if num_data_per_label ~= -1
-        assert (num_data_per_label >= 1);
-        assert (mod(500, num_data_per_label) == 0);
-        assert (mod(100, num_data_per_label) == 0);
-    end
-    %     
-    cifar_path = './Data/cifar-100-matlab/';
-    cifar_path = strcat(dir_path, cifar_path);
-    %     
-    % training data    
-    train = load(strcat(cifar_path, 'train.mat'));
-    data_train = prepare_data_fr_raw(train, is_preprocess); clear train;
-    num_pixels = size(data_train, 1);
-    assert (size(data_train, 2) == 50000);
-    %
-    if num_data_per_label ~= -1
-        data_train = data_train(:, 1:(500/num_data_per_label):end);
-    end
-    data_train = postprocess(data_train);
-%     
-% 
-% 
-% 
-    % test data
-    test = load(strcat(cifar_path, 'test.mat'));
-    data_test = prepare_data_fr_raw(test, is_preprocess); clear test;
-    assert (num_pixels == size(data_test, 1));
-    assert (size(data_test, 2) == 10000);
-    %     
-    if num_data_per_label ~= -1 
-        data_test = data_test(:, 1:(100/num_data_per_label):end);
-    end
-    %     
-    data_test = postprocess(data_test);
+    oxford_dir_path = strcat(dir_path, '../../data/image data in use/data set 2/all_data_sets/');
+    oxford_image_files = dir(strcat(oxford_dir_path, '*.jpg'));
+    oxford_image_files = oxford_image_files(randperm(length(oxford_image_files)));
+    oxford_image_files = oxford_image_files(1:num_data_per_label);
+    oxford_data = process_image_files(oxford_dir_path, oxford_image_files, image_size, dir_path);
+    oxford_data = oxford_data(:, 1:num_data_per_label);
+    clear oxford_dir_path oxford_image_files;
+%     oxford_data = add_noise(oxford_data);
 end
 
-function data_train = postprocess(data_train)
-    num_data = size(data_train, 2);
-    num_data_per_label = num_data/100;
-    assert(mod(num_data_per_label, 1) == 0);
+function y_new = add_noise(y)
+    y_new = y + (min(min(abs(y)))*1e-1)*rand(size(y));
+end
+
+function data = process_image_files(image_dir, image_files_list, image_size, dir_path)
+    num_images = length(image_files_list);
+    data_dim = prod(image_size);
     %
-    data_train_map = cell(100, 1);
-    for curr_label = 1:100
-        curr_idx = ((curr_label-1)*num_data_per_label)+1:(curr_label*num_data_per_label);
-        data_train_map{curr_label} = data_train(:, curr_idx);
+    data = zeros(data_dim, num_images);
+    %
+    curr_idx = 0;
+    for curr_image_file = image_files_list'
+        curr_idx = curr_idx + 1;
+        curr_data = process_image(strcat(image_dir, curr_image_file.name), image_size, dir_path);
+        data(:, curr_idx) = curr_data; clear curr_data;
     end
-    data_train = data_train_map; clear data_train_map;
+end
+
+function I = process_image(file_path, image_size, dir_path)
+    image_dim = prod(image_size);
+    %
+    I = imread(file_path);
+    I = imresize(I, image_size);    
+%     
+    if size(I, 3) == 3
+        I = rgb2gray(I);
+    end
+%     
+    I = double(I)/255; 
+    imwrite(I, strcat(dir_path, './temp.png'));
+    %     
+%     H = fspecial('unsharp');
+%     I = imfilter(I, H);
+    %
+    I = reshape(I, image_dim, 1);
+    %     
+%     I = preprocess_data(I);
+%     imwrite(reshape(I, image_size)*255, strcat(dir_path, './temp_preprocessed.png'));
+    %
+    assert(~nnz(isnan(I)));
+    assert(nnz(I) ~= 0);
 end
     
-function data_train = prepare_data_fr_raw(train, is_preprocess)
-    data_train = train.data';
-    data_train = convert_color_image_columns_to_gray_columns(data_train, 32, 32);
-    % 
-    [~, sort_idx] = sort(train.fine_labels);
-    clear train;
-    data_train = data_train(:, sort_idx);
-    % preprocessing    
-    if is_preprocess
-        data_train = double(data_train)/255;
-        data_train = preprocess_data(data_train);
-    end
-end

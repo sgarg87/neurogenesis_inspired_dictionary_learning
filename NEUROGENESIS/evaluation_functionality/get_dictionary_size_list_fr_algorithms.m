@@ -2,10 +2,10 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     dictionary_sizes = struct();
     %
     %     5 10 15 20 
-    global_size = [5 10 15 20 25 50 100 150];% 200 250 350 500];
+    global_size = [2 3 4 5 10 15 20 25];% 200 250 350 500];
     %
     if algorithms.mairal
-        dictionary_sizes.mairal = [global_size 200];
+        dictionary_sizes.mairal = [global_size 50 100 250];
     end
     %
     if algorithms.random

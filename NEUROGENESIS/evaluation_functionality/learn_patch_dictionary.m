@@ -1,5 +1,5 @@
 function D = learn_patch_dictionary(train_data, params)
-    curr_dict_size = 1000;
+    curr_dict_size = params.dict_size;
     %
     n = size(train_data, 1);
     assert(n == params.n);

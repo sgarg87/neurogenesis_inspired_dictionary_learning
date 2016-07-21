@@ -7,6 +7,8 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
         [train_data, test_data, data0, test_data0] = synthetic_sparse_data(input_dim, T, T);
     elseif strcmp(data_set_name, 'nlp')
         [train_data, test_data, data0, test_data0] = get_sparse_nlp_data();
+    elseif strcmp(data_set_name, 'large_image')
+        [train_data, test_data, data0, test_data0] = get_large_images(T, dir_path, input_dim);
     else
         error('no such data set');
     end
@@ -18,6 +20,20 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
     datasets_map.data_nst_test = test_data0;
 end
 
+
+function [oxford_data_train, oxford_data_test, flowers_data_train, flowers_data_test] = get_large_images(T, dir_path, input_dim)
+    n = sqrt(input_dim); clear input_dim;
+    assert(mod(n, 1) == 0);
+    image_size = [n n];
+    %     
+    [flowers_data, oxford_data] = flower_building_images_online(T*2, dir_path, image_size);
+    %     
+    flowers_data_train = flowers_data(:, 1:2:end);
+    flowers_data_test = flowers_data(:, 2:2:end);
+    %
+    oxford_data_train = oxford_data(:, 1:2:end);
+    oxford_data_test = oxford_data(:, 2:2:end);
+end
 
 function [train_data, test_data, data0, test_data0] = get_patches_data(T, dir_path, input_dim)
     %real images (patches)

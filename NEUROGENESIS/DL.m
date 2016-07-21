@@ -38,10 +38,11 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
     t_end=params.batch_size;
     t = 0; % iteration
 
-    if (find(mean(data) == 0))
-        display 'all zero column in data';
-        pause;
-    end
+%     Sahil commented the code.
+%     if (find(mean(data) == 0))
+%         display 'all zero column in data';
+%         pause;
+%     end
     % 
     while t_end <= params.T  % up to T samples
         t = t+1;
