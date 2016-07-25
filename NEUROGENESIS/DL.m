@@ -95,12 +95,31 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
             % neurogen version
             if curr_new_elements > 0
                 %% not sure if the normalization being done on right dimensions.
-                %% is normalization really required here ?                
+                %% is normalization really required here ?       
+                %                 
+                % sahil: added code for grand mother neurons
+                new_Dict_elements = normalize(rand(n,curr_new_elements));
+                if params.is_grand_mother_neurons
+                    mairal_params = params;
+                    mairal_params.lambda_D = 0;
+                    mairal_params.new_elements = 0;
+                    mairal_params.T = size(x, 2);
+                    [new_Dict_elements,~, ~, ~,~] = DL(x, new_Dict_elements, mairal_params, 'Mairal', [], []);
+                    clear mairal_params;
+                end
+                %      
                 fprintf('Adding %d new elements.', curr_new_elements);
-                D = [D normalize(rand(n,curr_new_elements))];
-                B = [B zeros(n,curr_new_elements)];
-                A = [A zeros(k,curr_new_elements)];  
-                A = [A;zeros(curr_new_elements,k+curr_new_elements)];
+                D = [D new_Dict_elements];
+                %
+                if params.is_immunized_born_neurons                    
+                    B = [B params.immunization_dose_fr_born_neurons*ones(n,curr_new_elements)];
+                    A = [A params.immunization_dose_fr_born_neurons*ones(k,curr_new_elements)];
+                    A = [A; params.immunization_dose_fr_born_neurons*ones(curr_new_elements,k+curr_new_elements)];                    
+                else
+                    B = [B zeros(n,curr_new_elements)];
+                    A = [A zeros(k,curr_new_elements)];  
+                    A = [A;zeros(curr_new_elements,k+curr_new_elements)];
+                end
                 %
                 if ~isempty(C)
                     C(k+1:k+curr_new_elements, :) = 0;

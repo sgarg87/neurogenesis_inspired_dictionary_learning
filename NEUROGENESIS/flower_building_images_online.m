@@ -1,5 +1,6 @@
 function [flowers_data, oxford_data] = flower_building_images_online(num_data_per_label, dir_path, image_size)
-    flower_dir_path = strcat(dir_path, '../../data/image data in use/data set 1/all_data_sets/');
+%     flower_dir_path = strcat(dir_path, '../../data/image data in use/data set 1/all_data_sets/');
+    flower_dir_path = strcat(dir_path, '../../data/102flowers/');
     flower_image_files = dir(strcat(flower_dir_path, '*.jpg'));
     flower_image_files = flower_image_files(randperm(length(flower_image_files)));
     flower_image_files = flower_image_files(1:num_data_per_label);
@@ -7,7 +8,8 @@ function [flowers_data, oxford_data] = flower_building_images_online(num_data_pe
     clear flower_dir_path flower_image_files;
 %     flowers_data = add_noise(flowers_data);
     %
-    oxford_dir_path = strcat(dir_path, '../../data/image data in use/data set 2/all_data_sets/');
+%     oxford_dir_path = strcat(dir_path, '../../data/image data in use/data set 2/all_data_sets/');
+    oxford_dir_path = strcat(dir_path, '../../data/oxbuild_images/');
     oxford_image_files = dir(strcat(oxford_dir_path, '*.jpg'));
     oxford_image_files = oxford_image_files(randperm(length(oxford_image_files)));
     oxford_image_files = oxford_image_files(1:num_data_per_label);

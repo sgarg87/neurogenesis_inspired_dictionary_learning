@@ -1,5 +1,5 @@
 function [ train_data_1, test_data_1, train_data_2, test_data_2 ] = synthetic_sparse_data(input_dim, T1, T2)
-    ratio_num_nonzeros = 0.005;
+    ratio_num_nonzeros = 0.05;
     ratio_num_nonzeros_off_diagonal = 0.001;
     %     
     num_nonzeros = floor(ratio_num_nonzeros*input_dim); clear ratio_num_nonzeros;

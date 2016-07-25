@@ -21,7 +21,7 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
 end
 
 
-function [oxford_data_train, oxford_data_test, flowers_data_train, flowers_data_test] = get_large_images(T, dir_path, input_dim)
+function [flowers_data_train, flowers_data_test, oxford_data_train, oxford_data_test] = get_large_images(T, dir_path, input_dim)
     n = sqrt(input_dim); clear input_dim;
     assert(mod(n, 1) == 0);
     image_size = [n n];
