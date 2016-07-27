@@ -13,31 +13,31 @@ function params = init_parameters()
 %     params.nz_in_dict = 0.01; % number of nonzeros in each dictionary element
 %     
 % 
-%     params.data_set_name = 'nlp';  % patches vs images
-%     params.n = 12883;  % input size
-%     params.T = 2750;  % total number of iterations/data samples
-%     params.coding_sparse_algo = 'proximal';
-%     params.nonzero_frac = 0.003;
-%     % proximal vs LARS
-%     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
-%     params.dictionary_element_sparse_algo = 'proximal';
-%     params.nz_in_dict = 0.0020; % number of nonzeros in each dictionary element
-% %     params.dict_element_lam = 1e0;
+    params.data_set_name = 'nlp';  % patches vs images
+    params.n = 12883;  % input size
+    params.T = 2750;  % total number of iterations/data samples
+    params.coding_sparse_algo = 'proximal';
+    params.nonzero_frac = 0.03;
+    % proximal vs LARS
+    params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+    params.dictionary_element_sparse_algo = 'proximal';
+    params.nz_in_dict = 0.0020; % number of nonzeros in each dictionary element
+%     params.dict_element_lam = 1e0;
 %
 % 
 % 
 % 
-    params.data_set_name = 'large_image';  % patches vs images
-    params.n = 10000;  % input size
-%     params.n = 65536;  % input size
-    params.T = 1900;  % total number of iterations/data samples
-    params.coding_sparse_algo = 'proximal';
-    params.nonzero_frac = 0.01;
-    % proximal vs LARS
-    params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
-    params.dictionary_element_sparse_algo = 'proximal';
-    params.nz_in_dict = 0.01; % number of nonzeros in each dictionary element
-%     params.dict_element_lam = 1e0;
+%     params.data_set_name = 'large_image';  % patches vs images
+%     params.n = 10000;  % input size
+% %     params.n = 65536;  % input size
+%     params.T = 1900;  % total number of iterations/data samples
+%     params.coding_sparse_algo = 'proximal';
+%     params.nonzero_frac = 0.05;
+%     % proximal vs LARS
+%     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+%     params.dictionary_element_sparse_algo = 'proximal';
+%     params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+% %     params.dict_element_lam = 1e0;
 % 
 % 
 % 
@@ -58,9 +58,9 @@ function params = init_parameters()
     % in case of grand mother neurons, as of now, we add as many new dict. elements (neurons) as number of data.
     params.is_grand_mother_neurons = false;
     if params.is_grand_mother_neurons
-        params.lambda_D = 0.0003; % group sparsity
+        params.lambda_D = 0.03; % group sparsity
     else
-        params.lambda_D = 0.0003; % group sparsity
+        params.lambda_D = 0.03; % group sparsity
     end
     %
     params.new_elements = 1;  % new elements added per each batch of data
