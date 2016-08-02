@@ -14,7 +14,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % 
     k = size(D_old,2);
     D = D_old;
-    max_num_iter = min(0.2*n, 200);
+    max_num_iter = min(max(0.01*n, 5), 20);
     % 
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
@@ -155,11 +155,13 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                     if ~nnz(D(:,j))  % all-zeros dictionary element - skip it 
                         continue;
                     end
+%                     
                     if ~A(j,j)
                         a = 1e-100;
                     else
                         a = A(j,j);  
                     end
+%                     
                     % updates for group dictionary learning Bengio 2009
                     z =  A(j,:)*D' - A(j,j)*D(:,j)';
                     if nnz(isnan(z))

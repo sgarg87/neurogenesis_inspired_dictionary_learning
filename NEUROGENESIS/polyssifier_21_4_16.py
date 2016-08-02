@@ -122,7 +122,7 @@ FONT_SIZE = 22
 mpl.rcParams['pdf.fonttype']=42
 # please set this number to no more than the number of cores on the machine you're
 # going to be running it on but high enough to help the computation
-PROCESSORS = 31 # 12 # 31 #12 # 31 # 
+PROCESSORS = 1 # 12 # 31 #12 # 31 #
 seed = rndc.SystemRandom().seed()
 NAMES = ["Chance", "Nearest Neighbors", "Linear SVM", "RBF SVM",  "Decision Tree",
          "Random Forest", "Logistic Regression", "Naive Bayes", "LDA"]
@@ -318,7 +318,10 @@ def make_classifiers(NAMES) :
         "Nearest Neighbors": KNeighborsClassifier(3),
         "Linear SVM": LinearSVC(penalty='l2', C=1,# probability=True,
                           class_weight='balanced'),
-        "RBF SVM": SVC(gamma=2, C=1, probability=True),
+        # sahil changed the configuration from "probability" True to False (probability
+        #  based inference doesn't work well in SVM models from part experiences,
+        # as SVM original algorithm just split the data with no probablistic notion of inference.)
+        "RBF SVM": SVC(gamma=2, C=1, probability=False),
         "Decision Tree": DecisionTreeClassifier(max_depth=None,
                                                 max_features="auto"),
         "Random Forest": RandomForestClassifier(max_depth=None,
@@ -359,8 +362,10 @@ def make_classifiers(NAMES) :
 
     params = {
         "Chance": {},
-        "Nearest Neighbors": {"n_neighbors": [1, 5, 10, 20]},
-        "Linear SVM": {"C": [0.1, 0.5, 1, 2],
+        #  3, 4, 5
+        # , 6, 7, 8, 10, 12, 15, 20, 30, 50, 75, 100
+        "Nearest Neighbors": {"n_neighbors": [1, 2, 3, 5, 10, 20, 50, 75, 100, 150, 200, 250]},
+        "Linear SVM": {"C": [0.1, 0.2, 0.3, 0.4, 0.5, 1, 1.5, 2],
                        "loss":['hinge', 'squared_hinge']},
         "RBF SVM": {"kernel": ["rbf"],
                      "gamma": np.logspace(-2, 0, 6).tolist() + \
@@ -467,21 +472,32 @@ def get_score(data, labels, fold_pairs, name, model, param, numTopVars,
     if name == "RBF SVM": #This doesn't use labels, but looks as ALL data
         logging.info("RBF SVM requires some preprocessing."
                     "This may take a while")
+        #
+        print 'data', data
+        #
         #Euclidean distances between samples
-        dist = pdist(StandardScaler().fit(data), "euclidean").ravel()
-        #dist = pdist(RobustScaler().fit_transform(data), "euclidean").ravel()
+        # sahil switched from the first call to second one for computing the dist as the first one is giving error.
+        # dist = pdist(StandardScaler().fit(data), "euclidean").ravel()
+        dist = pdist(RobustScaler().fit_transform(data), "euclidean").ravel()
+        #
         #Estimates for sigma (10th, 50th and 90th percentile)
         sigest = np.asarray(np.percentile(dist,[10,50,90]))
         #Estimates for gamma (= -1/(2*sigma^2))
         gamma = 1./(2*sigest**2)
         #Set SVM parameters with these values
-        param = [{"kernel": ["rbf"],
+        #
+        # sahil changed the code a bit to remove a bug
+        # param = [{"kernel": ["rbf"],
+        #           "gamma": gamma.tolist(),
+        #           "C": np.logspace(-2,2,5).tolist()}]
+        param = {"kernel": ["rbf"],
                   "gamma": gamma.tolist(),
-                  "C": np.logspace(-2,2,5).tolist()}]
+                  "C": np.logspace(-2, 2, 5).tolist()}
     # if name not in ["Decision Tree", "Naive Bayes"]:
     if param:
         if hasattr(classifier,'param_grid'): 
         # isinstance(classifier, GridSearchCV):
+            print 'param', param
             N_p = np.prod([len(l) for l in param.values()])
         elif isinstance(classifier, RandomizedSearchCV):
             N_p = classifier.n_iter
@@ -508,9 +524,13 @@ def get_score(data, labels, fold_pairs, name, model, param, numTopVars,
                 rankedVars = rank_per_fold[i]
             else:
                 rankedVars = np.arange(data.shape[1])
+            #
             for numVars in numTopVars:
                 logging.info('Classifying for top %i variables' % numVars)
-                confMat, totalErr, fitted_classifier = classify(data[:, rankedVars[:numVars]], 
+                #
+                # print 'rankedVars', rankedVars
+                #
+                confMat, totalErr, fitted_classifier = classify(data[:, rankedVars[:numVars]],
                                                                 labels,
                                                                 fold_pair,
                                                                 classifier)
@@ -522,6 +542,8 @@ def get_score(data, labels, fold_pairs, name, model, param, numTopVars,
             allTotalErrs.append(totalErrs)
             allFittedClassifiers.append(fitted_classifiers)
     else:
+        print 'parallel computing going on (debug Sahil ...) ..........................'
+        #
         classifier.n_jobs = PROCESSORS
         logging.info("Multiprocessing folds for classifier {}.".format(name))
         pool = Pool(processes=min(ksplit, PROCESSORS))
@@ -616,9 +638,12 @@ def classify(data, labels, (train_idx, test_idx), classifier=None):
         else:
                 fitted_model = copy.copy(classifier)        
         return confMatRate, totalErr, fitted_model
-    except np.linalg.linalg.LinAlgError:
-        return np.array([[np.nan, np.nan], [np.nan, np.nan]]), np.nan, None
-    
+    except np.linalg.linalg.LinAlgError as e:
+        # sahil added statement to raise the error instead of returning nun values
+        print e.message
+        raise e
+        # return np.array([[np.nan, np.nan], [np.nan, np.nan]]), np.nan, None
+
 
 def load_data(data_file, data_pattern='*.mat'):
     """
@@ -741,7 +766,7 @@ def save_combined_results(NAMES, dscore, totalErrs, numTopVars, out_dir, filebas
         scipy.io.savemat(f, totalErrResults)
 
 
-def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None, 
+def plot_errors(NAMES, numTopVars, dscore=None, totalErrs=None,
                 filename_base='', out_dir=None, compute_error=True,
                 format_used='png'):
     ######################################
@@ -768,6 +793,8 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
           (1., .3, .7)]
 
     ax = pl.gca()
+#       ax.set_prop_cycle(color=cl)
+
     if not compute_error:
         dscore = range(len(NAMES))
         totalErrs = range(len(NAMES))
@@ -777,7 +804,8 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
         # Plotting FP rate
         handles = []
         means = np.zeros(len(numTopVars))  # np.zeros(dscore.shape[2])
-        ax.set_prop_cycle(color=cl)
+        # # sahil added code for stds below
+        # stds = np.zeros(len(numTopVars))
         #
         for i in range(dscore.shape[0]):
             if compute_error:
@@ -785,25 +813,25 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
                     tmpData = dscore[i, :, j, 0, 1]
                     # Compute mean of std of non-Nan values
                     means[j] = np.mean(tmpData[np.invert(np.isnan(tmpData))])
-                    #stds[j] = np.std(tmpData[np.invert(np.isnan(tmpData))])
+                    # # sahil uncommented this lin below
+                    # stds[j] = np.std(tmpData[np.invert(np.isnan(tmpData))])
             else: 
                 name=NAMES[i]
                 fn = path.join(out_dir, 'confMats.mat')
                 dm = scipy.io.loadmat(fn)
                 z=dm[name]
-                xfold_mean=np.nanmean(z,0)
+                xfold_mean = np.nanmean(z, 0)
                 result_file = path.join(out_dir, name + '_errors.mat')
-                err_dict = scipy.io.loadmat(result_file, mat_dtype = True)
-
-                means = xfold_mean[:,0,1]
+                err_dict = scipy.io.loadmat(result_file, mat_dtype=True)
+                means = xfold_mean[:, 0, 1]
             handles.append(pl.errorbar(numTopVars, means, fmt='-o'))
         ax.set_title(filename_base, fontsize=FONT_SIZE-4)
         ax.set_xscale('log')
         ax.set_ylabel('FP rate', fontsize=FONT_SIZE)
         ax.set_xlabel('Number of top variables', fontsize=FONT_SIZE)
         ax.set_xlim(left = min(numTopVars)-1, right=max(numTopVars) + 100)
-        ax.set_ylim((0,1))
-        ax.set_yticks(np.arange(0, 1.1, 0.1))
+        # ax.set_ylim((0,1))
+        # ax.set_yticks(np.arange(0, 1.1, 0.1))
         pl.legend(handles, NAMES, bbox_to_anchor=(1, 1), loc=2,
                   borderaxespad=0., prop={'size':14})
         pl.grid()
@@ -821,7 +849,7 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
         # Plotting false-negative ratio
         means = np.zeros(len(numTopVars))
         # stds = np.zeros(dscore.shape[2])
-        ax.set_prop_cycle(color=cl)
+      #  ax.set_prop_cycle(color=cl)
         for i in range(dscore.shape[0]):
             if compute_error:
                 for j in range(dscore.shape[2]):
@@ -841,8 +869,8 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
         ax.set_xlabel('Number of top variables', fontsize=FONT_SIZE)
         ax.set_title(filename_base, fontsize=FONT_SIZE-4)
         ax.set_xlim(left = min(numTopVars)-1, right=max(numTopVars) + 100)
-        ax.set_ylim((0,1))
-        ax.set_yticks(np.arange(0, 1.1, 0.1))
+        # ax.set_ylim((0,1))
+        # ax.set_yticks(np.arange(0, 1.1, 0.1))
         pl.legend(handles, NAMES, bbox_to_anchor=(1, 1), loc=2,
                   borderaxespad=0.,prop={'size':14})
         pl.grid()
@@ -862,7 +890,7 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
         means = np.zeros(len(numTopVars))
         # stds = np.zeros(totalErrs.shape[2])
         ax = pl.gca()
-        ax.set_prop_cycle(color=cl)
+     #   ax.set_prop_cycle(color=cl)
         for i in range(totalErrs.shape[0]):
             if compute_error:
                 for j in range(totalErrs.shape[2]):
@@ -883,8 +911,8 @@ def plot_errors(NAMES,numTopVars, dscore=None, totalErrs=None,
         ax.set_xlabel('Number of top variables', fontsize=FONT_SIZE)
         ax.set_ylabel('Error rate', fontsize=FONT_SIZE)
         ax.set_xlim(left = min(numTopVars)-1, right=max(numTopVars) + 100)
-        ax.set_ylim((0,1))
-        ax.set_yticks(np.arange(0, 1.1, 0.1))
+        # ax.set_ylim((0,1))
+        # ax.set_yticks(np.arange(0, 1.1, 0.1))
         pl.legend(handles, NAMES, bbox_to_anchor=(1, 1), loc=2,
                   borderaxespad=0., prop={'size':14})
         pl.grid()
@@ -999,7 +1027,7 @@ if __name__ == "__main__":
         raise ValueError("Number of PROCESSORS exceed available CPUs, "
                          "please edit this in the script and come again!")
     
-    numTopVars = [50, 100, 300, 900, 2700]
+    # numTopVars = [50, 100, 300, 900, 2700]
     #numTopVars = [10, 50]
 
     parser = make_argument_parser()

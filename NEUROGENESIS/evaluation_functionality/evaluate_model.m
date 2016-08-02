@@ -1,8 +1,7 @@
-function evaluation = evaluate_model(model)
+function evaluation = evaluate_model(model, test_data)
     evaluation = struct();
     algorithms = model.algorithms;
     params = model.params;
-    test_data = model.datasets_map.data_nst_test;
     dictionary_sizes = model.dictionary_sizes;
     %     
     if algorithms.random

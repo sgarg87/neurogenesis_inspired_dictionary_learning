@@ -13,39 +13,32 @@ from os import path
 import numpy as np
 # import ipdb
 
-'''
-INPUT PARAMETERS
-'''
-
-mname = ('./large_image_sparse_codings/neurogen_group_mairal_sparse_codings_test.mat')
-out_dir = './classifier_out'
-ksplit = 10
-numTopVars = []
-
-# If false, load classifier results instead of running:
-compute_results = True
-
-NAMES = ["Nearest Neighbors", "RBF SVM", "SGD_SVM_elastic", "SDCA_SVM_elastic"] #, "Logistic Regression", "Chance"]
-
-#NAMES = ["SGD_logL1", "Logistic Regression"]
-##         "SGD_log_elastic", "SGD_SVM_elastic"]
-
-# NAMES = ["Chance", "SDCA_SVM_elastic"]
-#NAMES = []
-#NAMES = ["SGD_log_elastic", "SGD_SVM_elastic"]
-#NAMES = ["Chance", "Linear SVM",  "Logistic Regression", "SGD_logL1",
-#         "SGD_log_elastic", "SGD_SVM_elastic"]
-         
-#NAMES = ["Chance", "Nearest Neighbors", "Linear SVM", "RBF SVM",
-#         "Decision Tree", "Random Forest", "Logistic Regression",
-#         "Naive Bayes"] #, "LDA"]
-
-# NAMES = ["Chance", "Nearest Neighbors", "Linear SVM", "Decision Tree",
-#         "Logistic Regression", "Naive Bayes", "LDA"]
-# NAMES = ["Random Forest"]
-
 
 if __name__ == "__main__":
+    #
+    #
+    import sys
+    mname = sys.argv[1]
+    out_dir = sys.argv[2]
+    # mname = ('./large_image_sparse_codings/mairal_sparse_codings_test.mat')
+    # out_dir = './classifier_out'
+    #
+    #
+    '''
+    INPUT PARAMETERS
+    '''
+    ksplit = 5
+    #
+    numTopVars = [2, 3, 4, 5, 10, 15, 20, 25]
+    # numTopVars = [5, 10, 25, 35, 50, 75, 100, 150, 200, 300]
+    # numTopVars = [10, 30, 100, 300, 1000, 3000, 10000]
+    #
+    # If false, load classifier results instead of running:
+    compute_results = True
+    #
+    NAMES = ["RBF SVM", "Logistic Regression", "Linear SVM", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
+    # NAMES = ["Logistic Regression", "Linear SVM", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
+    #
     '''
     Initializing logger to write to file and stdout
     '''
@@ -63,17 +56,19 @@ if __name__ == "__main__":
     '''
     data, labels, data_file = ps.load_data(mname)
     if np.any(np.isnan(data)):
-        h=np.nonzero(np.isnan(data))
-        data[h[0],h[1]]=0
+        h = np.nonzero(np.isnan(data))
+        data[h[0], h[1]] = 0
         logging.warning('Nan values were removed from data')
     if np.any(np.isinf(data)):
-        h=np.nonzero(np.isinf(data))
-        data[h[0],h[1]]=0
+        h = np.nonzero(np.isinf(data))
+        data[h[0], h[1]] = 0
         logging.warning('Inf values were removed from data')
-    #Use the full brain:
-    numTopVars.append(data.shape[1])
+    #
+    # use all the variables also.
+    # numTopVars.append(data.shape[1])
+    #
     filename_base = path.splitext(path.basename(mname))[0]
-
+    #
     '''
     CLASSIFIER AND PARAM DICTS
     '''
@@ -90,7 +85,7 @@ if __name__ == "__main__":
     '''
 
     rank_per_fold = ps.get_rank_per_fold(data, labels, fold_pairs,
-                                         save_path=out_dir, parallel=False)
+                                         save_path=out_dir, parallel=False, load_file=False)
 
     '''
     COMPUTE SCORES

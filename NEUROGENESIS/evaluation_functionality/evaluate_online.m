@@ -21,9 +21,19 @@ function evaluate_online(is_hpcc, curr_core)
     %     
     model = adapt_model(model, model.datasets_map.data_nst_train);
     %     
-    model.evaluation = evaluate_model(model);
-    %
-    plot_model_evaluation(model, dir_path);
+    % replay
+    if model.params.is_replay
+        model = adapt_model(model, model.datasets_map.data_st_train);
+        model = adapt_model(model, model.datasets_map.data_nst_train);
+    end
+    %    
+    model.evaluation_st = evaluate_model(model, model.datasets_map.data_st_test);
+    model.evaluation = model.evaluation_st;
+    plot_model_evaluation(model, dir_path, 'first_domain');
+    %     
+    model.evaluation_nst = evaluate_model(model, model.datasets_map.data_nst_test);
+    model.evaluation = model.evaluation_nst;
+    plot_model_evaluation(model, dir_path, 'second_domain');
     %
     model_path = 'model';
     if is_hpcc && (curr_core > 0)

@@ -1,9 +1,9 @@
 
-function plot_model_evaluation(model, dir_path)
-    plot_pearson_correlation(model, dir_path);
-    plot_spearman_correlation(model, dir_path);
-    plot_error(model, dir_path);
-    plot_learned_dictionary_size(model, dir_path);
+function plot_model_evaluation(model, dir_path, prefix)
+    plot_pearson_correlation(model, dir_path, prefix);
+    plot_spearman_correlation(model, dir_path, prefix);
+    plot_error(model, dir_path, prefix);
+    plot_learned_dictionary_size(model, dir_path, prefix);
 end
 
 function [learned_dictionary_sizes, pearson_correlation, spearman_correlation, error] = post_process_results(evaluation, D, dictionary_sizes, params)
@@ -36,7 +36,7 @@ function [learned_dictionary_sizes, pearson_correlation, spearman_correlation, e
     end
 end
 
-function plot_pearson_correlation(model, dir_path)
+function plot_pearson_correlation(model, dir_path, prefix)
     params = model.params;
     % 
     close;
@@ -100,13 +100,13 @@ function plot_pearson_correlation(model, dir_path)
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
 %     ylim([0,1]);    
-    curr_path = strcat(dir_path, sprintf('Figures/pearson_correlation_n%d_T%d_new%d_%s_%s', params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_pearson_correlation_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
 end
 
-function plot_spearman_correlation(model, dir_path)
+function plot_spearman_correlation(model, dir_path, prefix)
     params = model.params;
     % 
     close;
@@ -170,13 +170,13 @@ function plot_spearman_correlation(model, dir_path)
     xlabel('final dictionary size k');
     ylabel('Spearman correlation (true, predicted)');
 %     ylim([0,1]);    
-    curr_path = strcat(dir_path, sprintf('Figures/spearman_correlation_n%d_T%d_new%d_%s_%s', params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_spearman_correlation_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
 end
 
-function plot_error(model, dir_path)
+function plot_error(model, dir_path, prefix)
     params = model.params;
     % 
     close;
@@ -239,13 +239,13 @@ function plot_error(model, dir_path)
     %
     xlabel('final dictionary size k');
     ylabel('Error (true, predicted)');
-    curr_path = strcat(dir_path, sprintf('Figures/error_n%d_T%d_new%d_%s_%s', params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_error_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
 end
 
-function plot_learned_dictionary_size(model, dir_path)
+function plot_learned_dictionary_size(model, dir_path, prefix)
     params = model.params;
     % 
     close;
@@ -308,7 +308,7 @@ function plot_learned_dictionary_size(model, dir_path)
     %
     xlabel('initial dictionary size k');
     ylabel('learned dictionary size');
-    curr_path = strcat(dir_path, sprintf('Figures/learnedk_n%d_T%d_new%d_%s_%s',params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_learnedk_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
