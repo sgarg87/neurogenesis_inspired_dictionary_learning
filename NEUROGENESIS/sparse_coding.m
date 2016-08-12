@@ -1,4 +1,4 @@
-function [C,err,correl] = sparse_coding(x,D, params)
+function [C, err, correl] = sparse_coding(x, D, params)
     % learn sparse code C for a given data and a given dictionary D using LARS-EN.
     %
     %
@@ -11,6 +11,8 @@ function [C,err,correl] = sparse_coding(x,D, params)
     nonzero_frac = params.nonzero_frac;
     lambda2_C = params.lambda2_C;
     %
+    input_dim = size(D, 1);
+    %     
     k = size(D,2);
     C = [];
     nonzeros_C = floor(size(D, 1)*nonzero_frac);
@@ -24,7 +26,8 @@ function [C,err,correl] = sparse_coding(x,D, params)
             D1 = normalize(D);
 %% Sahil commented the code for the centering. Discuss with Irina.
             y = x(:, i);
-%             y = center(x(:,i));
+%             y = center(y);
+% 
 %             %% sahil: centering of the data can make it a zero vector. In that case, sparse coding becomes zero and correspondingly the correlation metrics are nan.
 %             %% to deal with this issue, adding a very small noise in the data.
 %             y = y + (min(abs(y))*1e-2)*rand(size(y));
@@ -51,8 +54,10 @@ function [C,err,correl] = sparse_coding(x,D, params)
             assert(~nnz(isnan(sol)));
 %             assert(nnz(sol) ~= 0);
             %             
-            res = y-D1*sol;
-            err(i) = res'*res;
+            % sahil incorporated the change for normalizing with the mean square error with the input dimension           
+%             res = (y - D1*sol);
+            res = (center(y) - D1*sol);
+            err(i) = (res'*res)/input_dim;
             nonzeros(i) = nonzeros_C;
         else
             error('Sahil: this code block is not executed currently, and does not seem right. So, also the recent changes on proximal based sparsity implemented only for the above block and not this one.')

@@ -1,4 +1,7 @@
 function params = init_parameters()
+% lambda_D needs to be revised for some as L1/L2 is used for group sparsity now instead of the L1/L1
+% 
+% 
     params = struct();
     %
 %     % 'patch', 'cifar', 'synthetic', 'nlp'
@@ -13,17 +16,43 @@ function params = init_parameters()
 %     params.nz_in_dict = 0.01; % number of nonzeros in each dictionary element
 %     
 % 
-%     params.data_set_name = 'nlp';  % patches vs images
+%     params.data_set_name = 'nlp_sparse';  % patches vs images
 %     params.n = 12883;  % input size
 %     params.T = 2750;  % total number of iterations/data samples
 %     params.coding_sparse_algo = 'proximal';
-%     params.nonzero_frac = 0.3;
+%     params.nonzero_frac = 0.003;
 %     % proximal vs LARS
 %     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
 %     params.dictionary_element_sparse_algo = 'proximal';
-%     params.nz_in_dict = 0.0005; % number of nonzeros in each dictionary element
+%     params.nz_in_dict = 0.0020; % number of nonzeros in each dictionary element
+%     params.lambda_D = 3e-2; % group sparsity
 % %     params.dict_element_lam = 1e0;
 %
+% 
+% 
+% 
+% 
+% 
+%     params.data_set_name = 'nlp';  % patches vs images
+% %     params.n = 39912;  % input size
+%     params.n = 39601;  % input size
+% %     params.n = 1024;  % input size
+% %     params.n = 10000;  % input size
+%     params.T = 9500;  % total number of iterations/data samples
+%     params.coding_sparse_algo = 'proximal';
+%     % proximal vs LARS
+%     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+%     params.dictionary_element_sparse_algo = 'proximal';
+%     %     
+% %     params.nonzero_frac = 0.2;
+% %     params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+% %     params.lambda_D = 3e-2; % group sparsity
+%     %     
+%     params.nonzero_frac = 0.005;
+%     params.nz_in_dict = 0.0001; % number of nonzeros in each dictionary element
+%     params.lambda_D = 3e-1; % group sparsity
+% 
+% 
 % 
 % 
 % 
@@ -32,24 +61,30 @@ function params = init_parameters()
 %     params.n = 65536;  % input size
     params.T = 1900;  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
-    params.nonzero_frac = 0.2;
+    params.nonzero_frac = 0.005;
     % proximal vs LARS
-    params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+    params.is_sparse_dictionary = false; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
     params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
 %     params.dict_element_lam = 1e0;
+
+    % for large images 100x100 
+%     params.lambda_D = 1.5e-1; % group sparsity
+    % for small images 32x32
+    params.lambda_D = 3e-2; % group sparsity
 % 
 % 
 % 
 %     params.data_set_name = 'synthetic';  % patches vs images
-%     params.n = 10000;  % input size
-%     params.T = 1000;  % total number of iterations/data samples
+%     params.n = 1024;  % input size
+%     params.T = 100;  % total number of iterations/data samples
 %     params.coding_sparse_algo = 'proximal';
-%     params.nonzero_frac = 0.05;
+%     params.nonzero_frac = 0.35;
 %     % proximal vs LARS
 %     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
 %     params.dictionary_element_sparse_algo = 'proximal';
 %     params.nz_in_dict = 0.05; % number of nonzeros in each dictionary element
+%     params.lambda_D = 0.03; % group sparsity
 % %     params.dict_element_lam = 1e-1;
     %
     %
@@ -57,14 +92,14 @@ function params = init_parameters()
     params.immunization_dose_fr_born_neurons = 1e-10;
     % in case of grand mother neurons, as of now, we add as many new dict. elements (neurons) as number of data.
     params.is_grand_mother_neurons = false;
-    if params.is_grand_mother_neurons
-        params.lambda_D = 0.0003; % group sparsity
-    else
+%     if params.is_grand_mother_neurons
 %         params.lambda_D = 0.0003; % group sparsity
-        params.lambda_D = 3e0; % group sparsity
-    end
+%     else
+% %         params.lambda_D = 0.0003; % group sparsity
+%         params.lambda_D = 1e-1; % group sparsity
+%     end
     %
-    params.new_elements = 10;  % new elements added per each batch of data
+    params.new_elements = 50;  % new elements added per each batch of data
     %         
     params.batch_size = 200;  % batch size
 %     params.batch_size = int64(params.T/5);  % batch size
@@ -81,8 +116,8 @@ function params = init_parameters()
     params.lambda2_C = 0.00001; %0;  % LASSO
     %
     % conditional neurogenesis related config.
-    params.is_conditional_neurogenesis = false;
-    params.errthresh = 0.5;
+    params.is_conditional_neurogenesis = true;
+    params.errthresh = 0.1;
     %     
     % params.True_nonzero_frac = 0.2;
     %
@@ -112,5 +147,5 @@ function params = init_parameters()
     %
     params.multiclass_data = true;
     %
-    params.is_replay = true;
+    params.is_replay = false;
 end

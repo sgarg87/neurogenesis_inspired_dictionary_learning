@@ -113,6 +113,8 @@ from lightning.classification import CDClassifier, SDCAClassifier
 import sys
 import copy
 # import seaborn as sns
+import time
+
 
 # Font sizes for plotting
 font = {'family' : 'normal',
@@ -364,14 +366,16 @@ def make_classifiers(NAMES) :
         "Chance": {},
         #  3, 4, 5
         # , 6, 7, 8, 10, 12, 15, 20, 30, 50, 75, 100
+        #
+        #
         "Nearest Neighbors": {"n_neighbors": [1, 2, 3, 5, 10, 20, 50, 75, 100, 150, 200, 250]},
         "Linear SVM": {"C": [0.1, 0.2, 0.3, 0.4, 0.5, 1, 1.5, 2],
                        "loss":['hinge', 'squared_hinge']},
         "RBF SVM": {"kernel": ["rbf"],
                      "gamma": np.logspace(-2, 0, 6).tolist() + \
                               np.logspace(0,1,5)[1:].tolist(),
-                     "C": np.logspace(-2, 2, 5).tolist()},
-        "Decision Tree": {},
+                    "C": np.logspace(-2, 2, 5).tolist()},
+                    "Decision Tree": {},
         "Random Forest": {"max_depth": np.round(np.logspace(np.log10(2), \
                                        1.2, 6)).astype(int).tolist()},
         "Logistic Regression": {"C": np.logspace(-2, 3, 6).tolist()},
@@ -473,19 +477,30 @@ def get_score(data, labels, fold_pairs, name, model, param, numTopVars,
         logging.info("RBF SVM requires some preprocessing."
                     "This may take a while")
         #
-        print 'data', data
+        is_data_computed_gamma = True
         #
-        #Euclidean distances between samples
-        # sahil switched from the first call to second one for computing the dist as the first one is giving error.
-        # dist = pdist(StandardScaler().fit(data), "euclidean").ravel()
-        dist = pdist(RobustScaler().fit_transform(data), "euclidean").ravel()
+        if not is_data_computed_gamma:
+            # Sahil commented the code below that computes the gamma choices from data.
+            # The computed gamma choices seem too low thereby making SVM very slow. Instead, trying out fixed values.
+            print param
+            gamma = param['gamma']
+            gamma = np.array(gamma)
+            print 'gamma', gamma
+        else:
+            #Euclidean distances between samples
+            # sahil switched from the first call to second one for computing the dist as the first one is giving error.
+            # dist = pdist(StandardScaler().fit(data), "euclidean").ravel()
+            dist = pdist(RobustScaler().fit_transform(data), "euclidean").ravel()
+            print 'dist', dist
+            #Estimates for sigma (10th, 50th and 90th percentile)
+            sigest = np.asarray(np.percentile(dist, [10, 50, 90]))
+            print 'sigest', sigest
+            #Estimates for gamma (= -1/(2*sigma^2))
+            gamma = 1./(2*sigest**2)
+            print 'gamma', gamma
         #
-        #Estimates for sigma (10th, 50th and 90th percentile)
-        sigest = np.asarray(np.percentile(dist,[10,50,90]))
-        #Estimates for gamma (= -1/(2*sigma^2))
-        gamma = 1./(2*sigest**2)
+        #
         #Set SVM parameters with these values
-        #
         # sahil changed the code a bit to remove a bug
         # param = [{"kernel": ["rbf"],
         #           "gamma": gamma.tolist(),
@@ -659,7 +674,7 @@ def load_data(data_file, data_pattern='*.mat'):
     data: array_like
     """
     
-    dataMat = scipy.io.loadmat(data_file, mat_dtype = True)
+    dataMat = scipy.io.loadmat(data_file, mat_dtype=True)
     data = dataMat['data']
 
     logging.info("Data loading complete. Shape is %r" % (data.shape,))

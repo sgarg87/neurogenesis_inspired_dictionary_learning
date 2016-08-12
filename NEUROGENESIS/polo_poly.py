@@ -27,17 +27,26 @@ if __name__ == "__main__":
     '''
     INPUT PARAMETERS
     '''
-    ksplit = 5
     #
-    numTopVars = [2, 3, 4, 5, 10, 15, 20, 25]
-    # numTopVars = [5, 10, 25, 35, 50, 75, 100, 150, 200, 300]
+    ksplit = 5
+    # ksplit = 3
+    #
+    is_all_variables_include = True
+    #
+    numTopVars = [1, 5, 25, 50, 100, 200, 350, 500, 750]
+    # numTopVars = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 35, 50, 65, 75, 85, 100, 125, 150, 175, 200, 225]
+    # numTopVars = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 35, 50, 65, 75, 85, 100, 125, 150, 175]
+    # numTopVars = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 35, 50, 65, 75, 85, 100, 125]
+    # numTopVars = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 35, 50, 65, 75, 85]
+    # numTopVars = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25]
+    # numTopVars = [5, 10, 25]
     # numTopVars = [10, 30, 100, 300, 1000, 3000, 10000]
     #
     # If false, load classifier results instead of running:
     compute_results = True
     #
-    NAMES = ["RBF SVM", "Logistic Regression", "Linear SVM", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
-    # NAMES = ["Logistic Regression", "Linear SVM", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
+    # NAMES = ["RBF SVM", "Logistic Regression", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
+    NAMES = ["Logistic Regression", "Naive Bayes", "Nearest Neighbors", "Random Forest"]
     #
     '''
     Initializing logger to write to file and stdout
@@ -55,6 +64,7 @@ if __name__ == "__main__":
     DATA LOADING
     '''
     data, labels, data_file = ps.load_data(mname)
+    print 'data.dtype', data.dtype
     if np.any(np.isnan(data)):
         h = np.nonzero(np.isnan(data))
         data[h[0], h[1]] = 0
@@ -64,8 +74,13 @@ if __name__ == "__main__":
         data[h[0], h[1]] = 0
         logging.warning('Inf values were removed from data')
     #
+    #
+    #
     # use all the variables also.
-    # numTopVars.append(data.shape[1])
+    if is_all_variables_include:
+        numTopVars.append(data.shape[1])
+    #
+    #
     #
     filename_base = path.splitext(path.basename(mname))[0]
     #
@@ -86,11 +101,14 @@ if __name__ == "__main__":
 
     rank_per_fold = ps.get_rank_per_fold(data, labels, fold_pairs,
                                          save_path=out_dir, parallel=False, load_file=False)
-
+    print 'rank_per_fold', rank_per_fold
+    #
+    #
     '''
     COMPUTE SCORES
     '''
-
+    #
+    #
     score = {}
     dscore = []
     totalErrs = []

@@ -14,7 +14,9 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     % 
     k = size(D_old,2);
     D = D_old;
+    %     
     max_num_iter = min(max(0.01*n, 5), 20);
+%     max_num_iter = 200;
     % 
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
@@ -125,8 +127,8 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                         u = u/a;
                     else
                         if ~all(u == 0)
-                            u = sparsify_dictionary_element(u, params);
                             u = u/a;
+                            u = sparsify_dictionary_element(u, params);
                         end
                         assert(~nnz(isnan(u)));
                     end
@@ -178,14 +180,15 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                         uj = uj/a;
                     else
                         if ~all(uj == 0)
-                            uj = sparsify_dictionary_element(uj, params);
                             uj = uj/a;
+                            uj = sparsify_dictionary_element(uj, params);
                         end
                         assert(~nnz(isnan(uj)));
                     end
                     %
                     if params.is_sparse_dictionary
-                        uj_norm = sum(abs(uj));
+                        uj_norm = sqrt((uj')*uj);
+%                         uj_norm = sum(abs(uj));
                     else
                         uj_norm = sqrt((uj')*uj);
                     end

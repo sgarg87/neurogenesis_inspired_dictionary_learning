@@ -1,13 +1,14 @@
-function get_large_data_fr_classification()
-    [flowers_data, oxford_data] = flower_building_images_online(1900, './', [100 100]);
-    %     
-    num_data_flowers = size(flowers_data, 2);
-    num_data_oxford = size(oxford_data, 2);
+function get_large_data_fr_classification(model)
+    nst_test = model.datasets_map.data_nst_test;
+    nst2_test = model.datasets_map.data_nst2_test;
     % 
-    data = [flowers_data oxford_data];
+    num_data_nst = size(nst_test, 2);
+    num_data_nst2 = size(nst2_test, 2);
+    % 
+    data = [nst_test nst2_test];
     data = data';
     % 
-    labels = [-1*ones(num_data_flowers, 1); ones(num_data_oxford, 1)];
+    labels = [-1*ones(num_data_nst, 1); ones(num_data_nst2, 1)];
     data = [data labels];
     %
     num_data = size(data, 1);

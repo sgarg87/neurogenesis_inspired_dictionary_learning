@@ -1,5 +1,7 @@
 function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
-    % rename to DL.m
+    % Note: if the input data is sparse, be very careful when normalizing
+    % dictionary elements, or normalizing/centering data.
+    %     
     % learn a dictionary D, and a  sparse code C, for data
     %
     display('xxxxxxxxxxxxxxxxxxxxx DL start xxxxxxxxxxxxxxxxxxxxxxxx');
@@ -74,16 +76,27 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
             if params.is_conditional_neurogenesis
                 % if this is not the first iteration and neurogen should be happening (new_elements > 0)
                 if t > 1
-                    % perform error check and increase or decrease neurogen
-                    % if this new, 'test set' error on a new batch of samples is 'much'
-                    % worse than the 'train'/post error on the previous batch (i.e.
-                    % generalization is bad), then increase neurogenesis rate
-                    % rel_err = (norm(pre_err(t,:))-norm(post_err(t-1,:)))/norm(post_err(t-1,:));
-                    rel_corr = mean(post_correl_P(t-1,:))-mean(pre_correl_P(t,:)); %/mean(post_correl_P(t,:)));
-                    if  rel_corr > params.errthresh   %'generalization factor' : current test error vs. previous train error
-                        % increase neurogen (unless depression factor is > 0 :)
-                        birth_rate = 1;%1.5*(1+rel_corr);
+%                     Sahil added a simpler condition for the conditional
+%                     neurogenesis (if low correlation, add neurons).
+                    curr_error_fr_conditional_neurogenesis = 1-mean(correl(1,:));
+%                     display(curr_error_fr_conditional_neurogenesis);
+                    if curr_error_fr_conditional_neurogenesis >  params.errthresh
+                        birth_rate = curr_error_fr_conditional_neurogenesis;
                     end
+                    clear curr_error_fr_conditional_neurogenesis;
+% 
+% 
+% 
+%                     % perform error check and increase or decrease neurogen
+%                     % if this new, 'test set' error on a new batch of samples is 'much'
+%                     % worse than the 'train'/post error on the previous batch (i.e.
+%                     % generalization is bad), then increase neurogenesis rate
+%                     % rel_err = (norm(pre_err(t,:))-norm(post_err(t-1,:)))/norm(post_err(t-1,:));
+%                     rel_corr = mean(post_correl_P(t-1,:))-mean(pre_correl_P(t,:)); %/mean(post_correl_P(t,:)));
+%                     if  rel_corr > params.errthresh   %'generalization factor' : current test error vs. previous train error
+%                         % increase neurogen (unless depression factor is > 0 :)
+%                         birth_rate = 1;%1.5*(1+rel_corr);
+%                     end
                 else
                     birth_rate = 0;
                 end

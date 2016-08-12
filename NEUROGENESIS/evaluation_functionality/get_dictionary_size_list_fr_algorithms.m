@@ -3,11 +3,19 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     %
 % 50 100 150 200 350 500
 % 2 3 4
-    global_size = [2 3 4 5 10 15 20 25 50 60];
+% [5 10 15 20 25 35 50 75 100 125 150 200 250]
+% 
+%  
+% 
+% 1500 2500 5000 10000
+% 350 500 750 1000
+% 100 150
+    global_size = [5 10 15 20 25 50 75 100 150 250 350];
     %
     if algorithms.mairal
         % 250 350 500 750 1000
-        dictionary_sizes.mairal = [global_size 100 150 200 250 350 500];
+        % 200
+        dictionary_sizes.mairal = [global_size];
     end
     %
     if algorithms.random
