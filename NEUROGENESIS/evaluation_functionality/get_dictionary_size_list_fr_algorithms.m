@@ -10,7 +10,7 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
 % 1500 2500 5000 10000
 % 350 500 750 1000
 % 100 150
-    global_size = [5 10 15 20 25 50 75 100 150 250 350];
+    global_size = [5 25 50 100 150 250 350];
     %
     if algorithms.mairal
         % 250 350 500 750 1000
@@ -23,7 +23,7 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     end
     %
     if algorithms.group_mairal
-        dictionary_sizes.group_mairal = [global_size 2000 3500];
+        dictionary_sizes.group_mairal = [global_size];
     end
     %
     if algorithms.sg
@@ -31,7 +31,7 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
     end
     %
     if algorithms.neurogen_mairal
-        dictionary_sizes.neurogen_mairal = [5 10 15 20 25 50 75 100 150 200];
+        dictionary_sizes.neurogen_mairal = [global_size];
     end
     %
     if algorithms.neurogen_sg

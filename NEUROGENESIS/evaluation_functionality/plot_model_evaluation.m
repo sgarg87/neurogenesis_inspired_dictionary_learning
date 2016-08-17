@@ -100,7 +100,7 @@ function plot_pearson_correlation(model, dir_path, prefix)
     xlabel('final dictionary size k');
     ylabel('Pearson correlation (true, predicted)');
 %     ylim([0,1]);    
-    curr_path = strcat(dir_path, sprintf('Figures/%s_pearson_correlation_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_pearson_correlation_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
@@ -170,7 +170,7 @@ function plot_spearman_correlation(model, dir_path, prefix)
     xlabel('final dictionary size k');
     ylabel('Spearman correlation (true, predicted)');
 %     ylim([0,1]);    
-    curr_path = strcat(dir_path, sprintf('Figures/%s_spearman_correlation_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_spearman_correlation_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
@@ -239,7 +239,7 @@ function plot_error(model, dir_path, prefix)
     %
     xlabel('final dictionary size k');
     ylabel('Error (true, predicted)');
-    curr_path = strcat(dir_path, sprintf('Figures/%s_error_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_error_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);
@@ -308,7 +308,7 @@ function plot_learned_dictionary_size(model, dir_path, prefix)
     %
     xlabel('initial dictionary size k');
     ylabel('learned dictionary size');
-    curr_path = strcat(dir_path, sprintf('Figures/%s_learnedk_n%d_T%d_new%d_%s_%s', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name));
+    curr_path = strcat(dir_path, sprintf('Figures/%s_learnedk_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');
     close(gcf);

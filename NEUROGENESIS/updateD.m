@@ -8,7 +8,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     if ~issparse(D_old) && params.is_sparse_computations
         D_old = sparse(D_old);
     end
-    %     
+    %
     n = size(D_old,1);
     %
     % 
@@ -17,7 +17,7 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     %     
     max_num_iter = min(max(0.01*n, 5), 20);
 %     max_num_iter = 200;
-    % 
+    %
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
             if params.is_sparse_dictionary
