@@ -16,17 +16,17 @@ function params = init_parameters()
 %     params.nz_in_dict = 0.01; % number of nonzeros in each dictionary element
 %     
 % 
-%     params.data_set_name = 'nlp_sparse';  % patches vs images
-%     params.n = 12883;  % input size
-%     params.T = 2750;  % total number of iterations/data samples
-%     params.coding_sparse_algo = 'proximal';
-%     params.nonzero_frac = 0.003;
-%     % proximal vs LARS
-%     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
-%     params.dictionary_element_sparse_algo = 'proximal';
-%     params.nz_in_dict = 0.0020; % number of nonzeros in each dictionary element
-%     params.lambda_D = 3e-2; % group sparsity
-% %     params.dict_element_lam = 1e0;
+    params.data_set_name = 'nlp_sparse';  % patches vs images
+    params.n = 12883;  % input size
+    params.T = 2750;  % total number of iterations/data samples
+    params.coding_sparse_algo = 'proximal';
+    params.nonzero_frac = 0.003;
+    % proximal vs LARS
+    params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+    params.dictionary_element_sparse_algo = 'proximal';
+    params.nz_in_dict = 0.0020; % number of nonzeros in each dictionary element
+    params.lambda_D = 1e-1; % group sparsity
+%     params.dict_element_lam = 1e0;
 %
 % 
 % 
@@ -56,26 +56,26 @@ function params = init_parameters()
 % 
 % 
 % 
-    params.data_set_name = 'large_image';  % patches vs images
-    params.n = 1024;  % input size
-%     params.n = 10000;  % input size
-%     params.n = 65536;  % input size
-    params.T = 1900;  % total number of iterations/data samples
-    params.coding_sparse_algo = 'proximal';
-%     
-%     params.nonzero_frac = 0.0025;
-    params.nonzero_frac = 0.2;
-    % proximal vs LARS
-    params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
-    params.dictionary_element_sparse_algo = 'proximal';
-    params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
-%     params.dict_element_lam = 1e0;
-% 
-    % for large images 100x100 
-%     params.lambda_D = 7e-2; % group sparsity
-    % for small images 32x32
-    params.lambda_D = 3e-2; % group sparsity
-%     params.lambda_D = 3e-3; % group sparsity
+%     params.data_set_name = 'large_image';  % patches vs images
+%     params.n = 1024;  % input size
+% %     params.n = 10000;  % input size
+% %     params.n = 65536;  % input size
+%     params.T = 1900;  % total number of iterations/data samples
+%     params.coding_sparse_algo = 'proximal';
+% %     
+% %     params.nonzero_frac = 0.0025;
+%     params.nonzero_frac = 0.2;
+%     % proximal vs LARS
+%     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
+%     params.dictionary_element_sparse_algo = 'proximal';
+%     params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
+% %     params.dict_element_lam = 1e0;
+% % 
+%     % for large images 100x100 
+% %     params.lambda_D = 7e-2; % group sparsity
+%     % for small images 32x32
+%     params.lambda_D = 3e-2; % group sparsity
+% %     params.lambda_D = 3e-3; % group sparsity
 % 
 % 
 % 
@@ -83,7 +83,7 @@ function params = init_parameters()
 %     params.n = 1024;  % input size
 %     params.T = 100;  % total number of iterations/data samples
 %     params.coding_sparse_algo = 'proximal';
-%     params.nonzero_frac = 0.35;
+%     params.nonzero_frac = 0.5;
 %     % proximal vs LARS
 %     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
 %     params.dictionary_element_sparse_algo = 'proximal';

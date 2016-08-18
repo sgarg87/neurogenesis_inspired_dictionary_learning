@@ -10,7 +10,7 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
 % 1500 2500 5000 10000
 % 350 500 750 1000
 % 100 150
-    global_size = [5 25 50 100 150 250 350];
+    global_size = [5 25 50 100 150 250 350 500];
     %
     if algorithms.mairal
         % 250 350 500 750 1000
