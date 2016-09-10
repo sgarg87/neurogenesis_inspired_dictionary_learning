@@ -20,19 +20,17 @@ function [C, err, correl] = sparse_coding(x, D, params)
     %
     for i = 1:size(x,2)
         if nonzeros_C >= 0  % specified sparsity level
-            %% how important is to normalize the dictionary before learning the sparse codings and also the center of x.
-            %% not sure if the normalization and the centering being done along correct dimensions.
-            %% todo: see the effect of centering the data when sparse data. esp. for less sparse data, it may be destorying the sparsity.
-            D1 = normalize(D);
-%% Sahil commented the code for the centering. Discuss with Irina.
+            % todo: see the effect of centering the data when sparse data. esp. for less sparse data, it may be destorying the sparsity.
+            if params.is_sparse_data
+                D1 = D;
+            else
+                D1 = normalize(D);
+            end
+            % Sahil commented the code for the centering, instead just centering when computing the residual term.
+            % centering of the data can make it a zero vector. In that case, sparse coding becomes zero and correspondingly the correlation metrics are nan.
             y = x(:, i);
 %             y = center(y);
 % 
-%             %% sahil: centering of the data can make it a zero vector. In that case, sparse coding becomes zero and correspondingly the correlation metrics are nan.
-%             %% to deal with this issue, adding a very small noise in the data.
-%             y = y + (min(abs(y))*1e-2)*rand(size(y));
-            %             
-            %             
             if strcmp(params.coding_sparse_algo, 'lars')
                 betas = larsen(D1, y, lambda2_C, -nonzeros_C, 0);
                 sol = betas(end,:)';
@@ -55,8 +53,12 @@ function [C, err, correl] = sparse_coding(x, D, params)
 %             assert(nnz(sol) ~= 0);
             %             
             % sahil incorporated the change for normalizing with the mean square error with the input dimension           
-%             res = (y - D1*sol);
-            res = (center(y) - D1*sol);
+            if params.is_sparse_data
+                res = (y - D1*sol);
+            else
+                res = (center(y) - D1*sol);
+            end
+            %             
             err(i) = (res'*res)/input_dim;
             nonzeros(i) = nonzeros_C;
         else
