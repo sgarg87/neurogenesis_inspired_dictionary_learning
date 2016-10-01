@@ -82,7 +82,7 @@ import multiprocessing
 import numpy as np
 import os
 from os import path
-import pandas as pd
+# import pandas as pd
 import pickle
 import random as rndc
 from scipy.io import savemat
@@ -109,7 +109,7 @@ from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 # from sklearn.qda import QDA
 from sklearn.dummy import DummyClassifier
-from lightning.classification import CDClassifier, SDCAClassifier
+# from lightning.classification import CDClassifier, SDCAClassifier
 import sys
 import copy
 # import seaborn as sns
@@ -349,18 +349,19 @@ def make_classifiers(NAMES) :
                                           average = 3,
                                           alpha=1e-3,
                                           penalty='elasticnet'),
-                                          
-        "CGC_log_L1": CDClassifier(penalty="l1",
-                   loss="log",
-                   multiclass=False,
-                   max_iter=200,
-                   C=1,
-                   tol=1e-3),
-        "SDCA_SVM_elastic": SDCAClassifier(
-                   loss="hinge",
-                   max_iter=200,
-                   tol=1e-3)
 
+        # Sahil commented the two classiifer below as not able to install the packages
+        # "CGC_log_L1": CDClassifier(penalty="l1",
+        #            loss="log",
+        #            multiclass=False,
+        #            max_iter=200,
+        #            C=1,
+        #            tol=1e-3),
+        # "SDCA_SVM_elastic": SDCAClassifier(
+        #            loss="hinge",
+        #            max_iter=200,
+        #            tol=1e-3)
+        #
         }
 
     params = {

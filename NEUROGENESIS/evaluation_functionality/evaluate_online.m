@@ -17,7 +17,18 @@ function evaluate_online(is_hpcc, curr_core)
     %
     %
     model = adapt_model(model, model.datasets_map.data_st_train);
-    save(strcat(dir_path, 'old_model'), 'model');
+    %
+    suffix = sprintf('_learnedk_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', model.params.n, model.params.T, model.params.new_elements, model.params.adapt, model.params.data_set_name, floor(model.params.nonzero_frac*model.params.n), model.params.is_sparse_dictionary, floor(model.params.nz_in_dict*model.params.n));
+    %     
+    old_model_path = 'old_model';
+    if is_hpcc && (curr_core > 0)
+        old_model_path = strcat(old_model_path, num2str(curr_core));
+    end    
+    old_model_path = strcat(dir_path, old_model_path);
+    save(old_model_path, 'model');
+    old_model_path = strcat(old_model_path, suffix);
+    save(old_model_path, 'model');
+    clear old_model_path;
     %     
     if isfield(model.datasets_map, 'data_nst2_train')
         all_train_data = [model.datasets_map.data_nst_train model.datasets_map.data_nst2_train];
@@ -55,5 +66,9 @@ function evaluate_online(is_hpcc, curr_core)
     if is_hpcc && (curr_core > 0)
         model_path = strcat(model_path, num2str(curr_core));        
     end
-    save(strcat(dir_path, model_path), 'model');
+    model_path = strcat(dir_path, model_path);
+    save(model_path, 'model');
+    model_path = strcat(model_path, suffix);
+    save(model_path, 'model');
+    clear model_path;
 end
