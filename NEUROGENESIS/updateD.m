@@ -223,7 +223,11 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                 end
                 % 
                 max_diff = max(max(abs(Dprev-D)));
-                fprintf('\nmax_diff: %f', max_diff);
+%                 
+                if ~params.is_sparse_computations
+                    fprintf('\nmax_diff: %f', max_diff);
+                end
+%                 
                 if max_diff < params.epsilon
                     converged = 1;
                 end

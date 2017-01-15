@@ -1,8 +1,19 @@
-function [ train_data_1, test_data_1, train_data_2, test_data_2 ] = get_sparse_nlp_data()
+function [ train_data_1, test_data_1, train_data_2, test_data_2 ] = get_sparse_nlp_data(is_random_shuffle)
+    if is_random_shuffle
+        display('warning: randomly shuffling data');
+    end
+% 
+% 
+% 
     load('data_adjacency_matrix_selected_ml_it_nu.mat');
     data_adjacency_matrix = data_adjacency_matrix_selected;
     clear data_adjacency_matrix_selected;
 %     
+% 
+    if is_random_shuffle
+        data_adjacency_matrix = data_adjacency_matrix(:,randperm(size(data_adjacency_matrix, 2)));
+    end
+% 
 % 
     data2 = data_adjacency_matrix(:, 1:5500);
     data1 = data_adjacency_matrix(:, 5501:end);
