@@ -11,7 +11,7 @@ function algorithms = get_list_of_algorithms_fr_experiments()
     %     
     % setting it to false first and then true so that we can simply comment
     % the algorithms we don't want to use while running the experiments.     
-    %     
+    %
     algorithms.mairal = true;
 %     algorithms.neurogen_mairal = true;
 %     algorithms.group_mairal = true;

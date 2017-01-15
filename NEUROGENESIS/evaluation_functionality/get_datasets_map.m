@@ -1,5 +1,5 @@
 function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim)
-    is_load_datasets_map = false;
+    is_load_datasets_map = true;
     %
     if ~ is_load_datasets_map
         datasets_map = struct();
@@ -11,7 +11,11 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
         elseif strcmp(data_set_name, 'synthetic')
             [train_data, test_data, data0, test_data0] = synthetic_sparse_data(input_dim, T, T);
         elseif strcmp(data_set_name, 'nlp_sparse')
-            [train_data, test_data, data0, test_data0] = get_sparse_nlp_data();
+            [train_data, test_data, data0, test_data0] = get_sparse_nlp_data(false);
+            train_data = train_data(:, 1:T);
+            test_data = test_data(:, 1:T);
+            data0 = data0(:, 1:T);
+            test_data0 = test_data0(:, 1:T);
         elseif strcmp(data_set_name, 'nlp')
             [train_data, test_data, data0, test_data0] = get_nlp_data_all(T, dir_path, input_dim);
         elseif strcmp(data_set_name, 'large_image')
@@ -33,6 +37,13 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
 end
 
 
+% temp change
+% function [oxford_data_train, oxford_data_test, flowers_data_train, flowers_data_test, animals_data_train, animals_data_test] = get_large_images(T, dir_path, input_dim)
+% function [flowers_data_train, flowers_data_test, oxford_data_train, oxford_data_test, animals_data_train, animals_data_test] = get_large_images(T, dir_path, input_dim)
+% function [animals_data_train, animals_data_test, oxford_data_train, oxford_data_test, flowers_data_train, flowers_data_test] = get_large_images(T, dir_path, input_dim)
+% function [flowers_data_train, flowers_data_test, animals_data_train, animals_data_test, oxford_data_train, oxford_data_test] = get_large_images(T, dir_path, input_dim)
+% function [animals_data_train, animals_data_test, flowers_data_train, flowers_data_test, oxford_data_train, oxford_data_test] = get_large_images(T, dir_path, input_dim)
+% function [oxford_data_train, oxford_data_test, animals_data_train, animals_data_test, flowers_data_train, flowers_data_test] = get_large_images(T, dir_path, input_dim)
 function [oxford_data_train, oxford_data_test, flowers_data_train, flowers_data_test, animals_data_train, animals_data_test] = get_large_images(T, dir_path, input_dim)
     n = sqrt(input_dim); clear input_dim;
     assert(mod(n, 1) == 0);
