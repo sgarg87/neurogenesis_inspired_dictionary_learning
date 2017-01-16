@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import math
 
 
-font_size = 16
+font_size = 20
 
 
 def process_method(dir_path, method_name, fmt_str, is_classify_update):
@@ -32,17 +32,20 @@ def plot_classification_results(mairal_map, neurogenesis_map, classifier_name, n
     print 'max_var', max_var
     #
     plt.close()
+    #
+    #
     plt.xlabel('Number of top variables', fontsize=font_size)
-    plt.ylabel('Error Rate', fontsize=font_size)
+    plt.ylabel('Error rate', fontsize=font_size)
     plt.xscale('log', basex=2)
-    plt.title(classifier_name+' Classifier', fontsize=font_size-2)
+    plt.title(classifier_name+' Classifier', fontsize=font_size)
     plt.xlim((2**(math.log(min_var, 2)-1)), (2**(math.log(max_var, 2)+1)))
-    plt.errorbar(num_top_var_mairal, mairal_map['total_error']['means'], mairal_map['total_error']['stds'], fmt='-mx', label='Mairal')
-    plt.errorbar(num_top_var_neurogenesis, neurogenesis_map['total_error']['means'], neurogenesis_map['total_error']['stds'], fmt='-bs', label='neurogen-groupMairal')
+    plt.errorbar(num_top_var_mairal, mairal_map['total_error']['means'], mairal_map['total_error']['stds'], fmt='-md', label='ODL', lw=2, ms=12, mew=2, markerfacecolor='none', markeredgecolor='m')
+    plt.errorbar(num_top_var_neurogenesis, neurogenesis_map['total_error']['means'], neurogenesis_map['total_error']['stds'], fmt='-bx', label='NODL', lw=2, ms=12, markerfacecolor='none', mew=2, markeredgecolor='b')
     curr_path = dir_path+classifier_name
     print 'curr_path', curr_path
-    plt.legend(loc=3, prop={'size': font_size-2})
+    plt.legend(loc=1, prop={'size': font_size})
     plt.tick_params(labelsize=font_size)
+    plt.tight_layout()
     plt.savefig(curr_path+'.png', dpi=300, format='png')
 
 if __name__ == '__main__':

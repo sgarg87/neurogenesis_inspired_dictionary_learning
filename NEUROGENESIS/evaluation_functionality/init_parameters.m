@@ -76,7 +76,10 @@ function params = init_parameters()
 %     
 %     params.nonzero_frac = 0.0025;
 %     params.nonzero_frac = 0.0500;
-    params.nonzero_frac = 0.2;
+% 
+%     params.nonzero_frac = 0.2;
+    params.nonzero_frac = 0.5;
+%     
     % proximal vs LARS
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
@@ -127,8 +130,8 @@ function params = init_parameters()
 %         params.lambda_D = 1e-1; % group sparsity
 %     end
     %
-%     params.new_elements = 50;  % new elements added per each batch of data
-    params.new_elements = 100;  % new elements added per each batch of data
+    params.new_elements = 50;  % new elements added per each batch of data
+%     params.new_elements = 100;  % new elements added per each batch of data
     %         
     params.batch_size = 200;  % batch size
 %     params.batch_size = int64(params.T/5);  % batch size
