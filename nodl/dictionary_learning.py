@@ -25,7 +25,10 @@ class DictionaryLearning:
                  epsilon,
                  gamma,
                  is_neurogenesis_conditional,
-                 dict_update_method
+                 dict_update_method,
+                 batch_size,
+                 num_samples_fr_processing,
+                 is_grand_mother_neurons
     ):
         # dictionary
         self.D = D
@@ -65,14 +68,20 @@ class DictionaryLearning:
         # upper bound on Pearson correlation for conditional neurogenesis
         self.gamma = gamma
         #
-        #
         self.dict_update_method = dict_update_method
+        #
+        self.batch_size = batch_size
+        #
+        self.num_samples_fr_processing = num_samples_fr_processing
+        #
+        self.is_grand_mother_neurons = is_grand_mother_neurons
 
     def __initialize_dictionary__(self):
         raise NotImplemented
 
-    def __initialize_memory__(self):
-        raise NotImplemented
+    def __initialize_memory__(self, n, k):
+        self.A = np.zeros(shape=(k, k))
+        self.B = np.zeros(shape=(n, k))
 
     def __update_dictionary__(self, max_num_iter, dict_elements_dimension, num_dict_elements, is_group_sparsity=False):
         is_converged = False
@@ -173,13 +182,86 @@ class DictionaryLearning:
         else:
             raise NotImplementedError, 'no such dictionary update method implemented.'
 
-    def dictionary_learning(self):
-        raise NotImplemented
+    def dictionary_learning(self, x):
+        print 'The initial number of dictionary elements is {}.'.format(self.D.shape[1])
+        #
+        n = self.D.shape[0]
+        k = self.D.shape[1]
+        num_data = x.shape[1]
+        assert x.shape[0] == n
+        #
+        C = np.zeros(shape=(k, num_data))
+        #
+        if (self.A is None) or (self.B is None):
+            assert (self.A is None) and (self.B is None)
+            self.__initialize_memory__(n, k)
+        #
+        iter_start = 0
+        iter_end = self.batch_size
+        curr_iter = 0
+        #
+        while iter_end < self.num_samples_fr_processing:
+            curr_iter += 1
+            curr_data_batch = x[:, iter_start:iter_end]
+            #
+            # sparse coding
+            curr_codes_batch = self.compute_codes(curr_data_batch)
+            # todo: compute error and correlation metrics here
+            #
+            if self.max_new_elements > 0:
+                if self.is_neurogenesis_conditional:
+                    if curr_iter > 0:
+                        # todo: computer birth rate based on error
+                        raise NotImplemented
+                    else:
+                        birth_rate = 0
+                    #
+                    curr_new_elements_count = int(math.floor(self.max_new_elements*birth_rate))
+                else:
+                    curr_new_elements_count = self.max_new_elements
+                #
+                if curr_new_elements_count > 0:
+                    #
+                    print 'Adding new dictionary elements {}'.format(curr_new_elements_count)
+                    #
+                    new_dictionary_elements = np.random(shape=(n, curr_new_elements_count))
+                    new_dictionary_elements = self.normalize_dictionary_elements(new_dictionary_elements)
+                    #
+                    if self.is_grand_mother_neurons:
+                        raise NotImplemented
+                    #
+                    self.D = np.hstack((self.D, new_dictionary_elements))
+                    #
+                    # extend memory
+                    self.B = np.hstack((self.B, np.zeros(shape=(n, curr_new_elements_count))))
+                    self.A = np.hstack((self.A, np.zeros(shape=(k, curr_new_elements_count))))
+                    self.A = np.vstack((self.A, np.zeros(shape=(curr_new_elements_count, k+curr_new_elements_count))))
+                    #
+                    # extend codes
+                    C = np.vstack((C, np.zeros(shape=(curr_new_elements_count, C.shape[1]))))
+                    #
+                    k += curr_new_elements_count
+                    #
+                    curr_codes_batch = self.compute_codes(curr_data_batch)
+                    curr_data_batch = None
+            #
+            self.A = self.A + np.outer(curr_codes_batch, curr_codes_batch.T)
+            self.B = self.B +np.outer(curr_data_batch, curr_codes_batch.T)
+            #
+            C[:, iter_start:iter_end] = curr_codes_batch
+            curr_codes_batch = None
+            #
+            self.update_dictionary()
+            #
+            # todo: add code related to deletion of zero dictionary elements if group sparsity constraint
+            #
+            iter_start = iter_end
+            iter_end = iter_end + self.batch_size
 
     def __sparsify_dictionary_element__(self, dict_element):
         raise NotImplementedError
 
-    def normalize_dictionary(self, D):
+    def normalize_dictionary_elements(self, D):
         raise NotImplemented
 
     def compute_codes(self, x):
@@ -201,7 +283,7 @@ class DictionaryLearning:
         #
         # normalize the dictionary
         if not self.is_sparse_data:
-            D = self.normalize_dictionary(D)
+            D = self.normalize_dictionary_elements(D)
         #
         codes = np.zeros(shape=(k, num_data_points))
         #
