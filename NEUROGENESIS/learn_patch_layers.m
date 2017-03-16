@@ -1,9 +1,11 @@
 function model = learn_patch_layers(model)
-    curr_layer = learn_layer(model.datasets_map, model.params, [4 4], 12.5, true, 0.80, 1024, 1e-4);
+    curr_layer = learn_layer(model.datasets_map, model.params, [8 8], 0.4, true, 0.05, 256, 1e-2);
+%     
+%     curr_layer = learn_layer(model.datasets_map, model.params, [4 4], 12.5, true, 0.80, 1024, 1e-4);
     %     
 %     curr_layer = learn_layer(curr_layer.datasets_map, model.params, [8 8], 0.4, true, 0.8, 64, 1e-3);
     %     
-    curr_layer = learn_layer(curr_layer.datasets_map, model.params, [16 16], 0.1, true, 0.2, 256, 1e-3);
+%     curr_layer = learn_layer(curr_layer.datasets_map, model.params, [16 16], 0.1, true, 0.2, 256, 1e-3);
     %     
 %     curr_layer = learn_layer(curr_layer.datasets_map, model.params, [32 32], 0.1, true, 0.2, 1024, 1e-3);
     %     

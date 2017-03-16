@@ -1,5 +1,5 @@
 function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim)
-    is_load_datasets_map = true;
+    is_load_datasets_map = false;
     %
     if ~ is_load_datasets_map
         datasets_map = struct();
