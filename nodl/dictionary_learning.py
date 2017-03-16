@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numpy.linalg as npl
 
 
 class DictionaryLearning:
@@ -66,6 +67,12 @@ class DictionaryLearning:
         #
         #
         self.dict_update_method = dict_update_method
+
+    def __initialize_dictionary__(self):
+        raise NotImplemented
+
+    def __initialize_memory__(self):
+        raise NotImplemented
 
     def __update_dictionary__(self, max_num_iter, dict_elements_dimension, num_dict_elements, is_group_sparsity=False):
         is_converged = False
@@ -166,11 +173,58 @@ class DictionaryLearning:
         else:
             raise NotImplementedError, 'no such dictionary update method implemented.'
 
+    def dictionary_learning(self):
+        raise NotImplemented
+
     def __sparsify_dictionary_element__(self, dict_element):
         raise NotImplementedError
 
-    def compute_codes(self):
-        pass
+    def normalize_dictionary(self, D):
+        raise NotImplemented
+
+    def compute_codes(self, x):
+        #
+        # todo: make appropriate efficiency related changes for the case of sparse dictionary, using scipy linear algebra package
+        #
+        input_dimension = self.D.shape[0]
+        k = self.D.shape[1]
+        #
+        code_sparse_nnz = math.floor(input_dimension*self.code_sparse_nnz_ratio)
+        print 'code_sparse_nnz', code_sparse_nnz
+        #
+        num_data_points = x.shape[1]
+        print 'num_data_points', num_data_points
+        #
+        assert code_sparse_nnz >= 0
+        #
+        D = np.copy(self.D)
+        #
+        # normalize the dictionary
+        if not self.is_sparse_data:
+            D = self.normalize_dictionary(D)
+        #
+        codes = np.zeros(shape=(k, num_data_points))
+        #
+        for curr_data_idx in range(num_data_points):
+            curr_data = x[:, curr_data_idx]
+            #
+            assert self.coding_sparse_algo == 'proximal'
+            #
+            sol = npl.lstsq(D, curr_data)[0]
+            if code_sparse_nnz < k:
+                sparse_coding_lambda = self.binary_search_proximal_threshold(sol, code_sparse_nnz, max(0.01*code_sparse_nnz, 1))
+                sol_abs = np.abs(sol)-sparse_coding_lambda
+                sol_abs[np.where(sol_abs < 0)] = 0
+                sol_sign = np.sign(sol)
+                sol = sol_sign*sol_abs
+                sol_abs = None
+                sol_sign = None
+            #
+            codes[:, curr_data_idx] = sol
+        #
+        # add code for computing error and pearson correlations, here or as a separate module, as a function of codes and dictionary
+        #
+        return codes
 
     def binary_search_proximal_threshold(self):
         pass

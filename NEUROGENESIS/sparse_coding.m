@@ -21,6 +21,7 @@ function [C, err, correl] = sparse_coding(x, D, params)
     for i = 1:size(x,2)
         if nonzeros_C >= 0  % specified sparsity level
             % todo: see the effect of centering the data when sparse data. esp. for less sparse data, it may be destorying the sparsity.
+            % todo: why to normalize the dictionary every time we process data, this code snippet should be outside of the for loop.             
             if params.is_sparse_data
                 D1 = D;
             else
