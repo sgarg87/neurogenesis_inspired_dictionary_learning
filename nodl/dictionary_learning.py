@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import numpy.linalg as npl
+import numpy.random as npr
 
 
 class DictionaryLearning:
@@ -9,8 +10,6 @@ class DictionaryLearning:
     # todo: for high number of elements in a dictionary, see if we can have A and B matrix to be sparse. B can be sparse if data is sparse (and optionally codes are sparse). Whereas, A could be sparse if codes are sparse
     #
     def __init__(self,
-                 X,
-                 D,
                  alg,
                  A,
                  B,
@@ -31,7 +30,7 @@ class DictionaryLearning:
                  is_grand_mother_neurons
     ):
         # dictionary
-        self.D = D
+        self.D = None
         #
         # algorithm to learn the dictionary
         self.alg = alg
@@ -76,14 +75,14 @@ class DictionaryLearning:
         #
         self.is_grand_mother_neurons = is_grand_mother_neurons
 
-    def __initialize_dictionary__(self):
-        raise NotImplemented
+    def __initialize_dictionary__(self, n, k):
+        self.D = npr.rand(n, k)
 
     def __initialize_memory__(self, n, k):
         self.A = np.zeros(shape=(k, k))
         self.B = np.zeros(shape=(n, k))
 
-    def __update_dictionary__(self, max_num_iter, dict_elements_dimension, num_dict_elements, is_group_sparsity=False):
+    def __update_dictionary__(self, max_num_iter, num_dict_elements, is_group_sparsity=False):
         is_converged = False
         curr_count = 0
         #
@@ -136,7 +135,7 @@ class DictionaryLearning:
                     if u_norm == 0:
                         coeff = 0
                     else:
-                        ceoff = max((1-(self.lambda_D/u_norm)), 0)
+                        ceoff = max((1-(self.lambda_g/u_norm)), 0)
                     u_norm = None
                     # soft thresholding
                     u = coeff*u
@@ -168,14 +167,12 @@ class DictionaryLearning:
         if self.dict_update_method == 'mairal':
             self.__update_dictionary__(
                 max_num_iter=max_num_iter,
-                dict_elements_dimension=dict_elements_dimension,
                 num_dict_elements=num_dict_elements,
                 is_group_sparsity=False
             )
         elif self.dict_update_method == 'group_mairal':
             self.__update_dictionary__(
                 max_num_iter=max_num_iter,
-                dict_elements_dimension=dict_elements_dimension,
                 num_dict_elements=num_dict_elements,
                 is_group_sparsity=True
             )
@@ -224,7 +221,7 @@ class DictionaryLearning:
                     #
                     print 'Adding new dictionary elements {}'.format(curr_new_elements_count)
                     #
-                    new_dictionary_elements = np.random(shape=(n, curr_new_elements_count))
+                    new_dictionary_elements = npr.rand(n, curr_new_elements_count)
                     new_dictionary_elements = self.normalize_dictionary_elements(new_dictionary_elements)
                     #
                     if self.is_grand_mother_neurons:
@@ -259,7 +256,31 @@ class DictionaryLearning:
             iter_end = iter_end + self.batch_size
 
     def __sparsify_dictionary_element__(self, dict_element):
-        raise NotImplementedError
+        #
+        # in python code, lars should be fast enough and accurate
+        #
+        if self.dictionary_element_sparse_alg == 'lars':
+            raise NotImplementedError
+        elif self.dictionary_element_sparse_alg == 'proximal':
+            n = dict_element.size
+            num_nonzero_dict_element = math.floor(self.dict_sparse_nnz_ratio * n)
+            #
+            if (num_nonzero_dict_element < n):
+                #
+                dict_element_lam = self.binary_search_proximal_threshold(
+                        dict_element,
+                        num_nonzero_dict_element,
+                        max(0.01*num_nonzero_dict_element, 1)
+                )
+                #
+                num_nonzero_dict_element = None
+                #
+                dict_element = self.proximal_operator(sol=dict_element, sparsity_lambda=dict_element_lam)
+                dict_element_lam = None
+            #
+            return dict_element
+        else:
+            raise AssertionError
 
     def normalize_dictionary_elements(self, D):
         raise NotImplemented
@@ -295,12 +316,7 @@ class DictionaryLearning:
             sol = npl.lstsq(D, curr_data)[0]
             if code_sparse_nnz < k:
                 sparse_coding_lambda = self.binary_search_proximal_threshold(sol, code_sparse_nnz, max(0.01*code_sparse_nnz, 1))
-                sol_abs = np.abs(sol)-sparse_coding_lambda
-                sol_abs[np.where(sol_abs < 0)] = 0
-                sol_sign = np.sign(sol)
-                sol = sol_sign*sol_abs
-                sol_abs = None
-                sol_sign = None
+                sol = self.proximal_operator(sol, sparsity_lambda=sparse_coding_lambda)
             #
             codes[:, curr_data_idx] = sol
         #
@@ -308,11 +324,59 @@ class DictionaryLearning:
         #
         return codes
 
-    def binary_search_proximal_threshold(self):
-        pass
+    def proximal_operator(self, sol, sparsity_lambda):
+        sol_abs = np.abs(sol) - sparsity_lambda
+        sol_abs[np.where(sol_abs < 0)] = 0
+        sol_sign = np.sign(sol)
+        sol = sol_sign * sol_abs
+        sol_abs = None
+        sol_sign = None
+        return sol
+
+    def binary_search_proximal_threshold(self, u, num_nonzeros, sparsity_margin):
+        assert num_nonzeros < u.size
+        lam_threshold = self.binary_search(np.abs(u), num_nonzeros, sparsity_margin)
+        return lam_threshold
+
+    def binary_search(self, abs_u, num_nonzero_dict_element, sparsity_margin):
+        min_val = 0.0
+        max_val = max(abs_u)
+        n = abs_u.size
+        #
+        count_iter = 0
+        #
+        while True:
+            count_iter += 1
+            #
+            if count_iter > max(n, 1e4):
+                print 'warning: running forever'
+            #
+            mean_val = (min_val + max_val)/2
+            #
+            num_mean = np.count_nonzero(self.proximal_operator(abs_u, mean_val))
+            #
+            curr_val_diff = abs(max_val - min_val)
+            #
+            if max_val != 0:
+                curr_val_diff /= max_val
+            #
+            if curr_val_diff < 1e-4:
+                return mean_val
+            #
+            if abs(num_mean - num_nonzero_dict_element) <= sparsity_margin:
+                return mean_val
+            elif num_mean > num_nonzero_dict_element:
+                min_val = mean_val
+            elif num_mean < num_nonzero_dict_element:
+                max_val = mean_val
+            else:
+                raise AssertionError
+        #
+        raise AssertionError
 
     def update_memory(self, alpha, x):
         # x is a batch of data
         # alpha is code for the data
-        pass
+        self.B += np.outer(x, alpha)
+        self.A += np.outer(alpha, alpha)
 
