@@ -79,11 +79,13 @@ function [C, err, correl] = sparse_coding(x, D, params)
         else
             correl_Spearman(i)  = corr(x(:,i),D1*sol,'type','Spearman');
             correl_Pearson(i) = corr(x(:,i),D1*sol,'type','Pearson');
-            if nnz(isnan(correl_Spearman(i))) || nnz(isnan(correl_Pearson(i))) 
-                pause;
-            end
-            assert(~nnz(isnan(correl_Spearman(i))));
-            assert(~nnz(isnan(correl_Pearson(i))));
+            %             
+            % Sahil commented it on April 28, 2017             
+%             if nnz(isnan(correl_Spearman(i))) || nnz(isnan(correl_Pearson(i))) 
+%                 pause;
+%             end
+%             assert(~nnz(isnan(correl_Spearman(i))));
+%             assert(~nnz(isnan(correl_Pearson(i))));
         end
         %    
         C = [C sol];
@@ -92,11 +94,14 @@ function [C, err, correl] = sparse_coding(x, D, params)
     %     
     correl = [correl_Spearman; correl_Pearson];
     %
-    if nnz(isnan(correl))
-        pause;
-    end
-    assert(~nnz(isnan(correl)));
     %
+    % Sahil commented it on April 27, 2017    
+%     if nnz(isnan(correl))
+%         pause;
+%     end
+%     assert(~nnz(isnan(correl)));
+    %
+    %     
     if params.is_sparse_computations
         if ~issparse(C)
             C = sparse(C);
