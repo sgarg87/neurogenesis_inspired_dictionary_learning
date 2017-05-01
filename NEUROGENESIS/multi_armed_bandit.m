@@ -7,7 +7,9 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     [X, Y] = get_data(data_set_name);
     %
     if is_dictionary_coding
-        [X, dict_model] = get_dictionary_codes(X);
+        dict_model = get_dictionary_codes(X);
+    else
+        dict_model = [];
     end
     %     
     num_arms = length(unique(Y));
@@ -20,7 +22,11 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
         p = ones(num_arms, 1);
     end
     % 
-    num_features = size(X, 2);
+    if is_dictionary_coding
+        num_features = size(dict_model.D, 2);
+    else
+        num_features = size(X, 2);
+    end
     % 
     loss = zeros(num_cycles, 1);
     %
@@ -28,6 +34,12 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     for curr_idx =1:num_cycles
         if ((curr_idx == 1) || (~ is_stationary))
             model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p);
+            %
+            model.is_dictionary_coding = is_dictionary_coding;
+            %             
+            if is_dictionary_coding
+                model.dict_model = dict_model;
+            end
         end
         %         
         [model, loss(curr_idx), correct_arms{curr_idx}, loss_arms{curr_idx}] = adapt_model_online(X, Y, model);
@@ -48,9 +60,6 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     %     
     fprintf('\n Mean Loss is %f.\n', mean(loss));
     %
-    if is_dictionary_coding
-        model.dict_model = dict_model;
-    end
     %
     if model.num_arms == 2
         precision = zeros(num_cycles, 1);
@@ -75,7 +84,7 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     save model model;
 end
 
-function [C, dict_model] = get_dictionary_codes(X)
+function [dict_model] = get_dictionary_codes(X)
     addpath('evaluation_functionality/');
     addpath 'ElasticNet/';
     %
@@ -94,34 +103,34 @@ function [C, dict_model] = get_dictionary_codes(X)
     % initialize model    
     dict_model = initialize_D_A_B(curr_dictionary_sizes, params);
     %     
+    dict_model.D = dict_model.D{curr_dict_size};
+    dict_model.A = dict_model.A{curr_dict_size};
+    dict_model.B = dict_model.B{curr_dict_size};
     % 
     % learn the model, online on the data
     X_dict_lrn = datasample(X, params.T, 2, 'Replace', false);
     %     
     if is_mairal
-        [dict_model.D{curr_dict_size}, ~, ~, ~, ~] = mairal(X_dict_lrn, dict_model.D{curr_dict_size}, params, dict_model.A{curr_dict_size}, dict_model.B{curr_dict_size});
+        [dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
     else
-        [dict_model.D{curr_dict_size}, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D{curr_dict_size}, params, dict_model.A{curr_dict_size}, dict_model.B{curr_dict_size});
+        [dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
     end
     %
     % removing zero elements from the dictionary    
-    dict_model.D{curr_dict_size} = dict_model.D{curr_dict_size}(:, find(sum(dict_model.D{curr_dict_size}) ~= 0));
+    dict_model.D = dict_model.D(:, find(sum(dict_model.D) ~= 0));
     %     
     dict_model.params = params;
     dict_model.dictionary_sizes = curr_dictionary_sizes;
-    %     
-    % evaluate model and also obtain the codes
-    [C, error, correlation] = sparse_coding(X, dict_model.D{curr_dict_size}, params);
-    %     
-%     mean(error)
-%     mean(correlation)
     %
-    dict_model.error = error;
-    dict_model.correlation = correlation;
+%     % evaluate model and also obtain the codes
+%     [C, error, correlation] = sparse_coding(X, dict_model.D{curr_dict_size}, params);
+    %
+%     dict_model.error = error;
+%     dict_model.correlation = correlation;
     %     
     save dict_model dict_model;
     % 
-    C = C';
+%     C = C';
 end
 
 function params = init_dict_parameters(num_dim, num_data)
@@ -131,7 +140,7 @@ function params = init_dict_parameters(num_dim, num_data)
     %     
     params.n = num_dim;  % input size
     %     
-    params.T = floor(num_data*0.1);  % total number of iterations/data samples
+    params.T = floor(num_data*0.99);  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
     params.nonzero_frac = 0.1;
 %     params.nonzero_frac = 0.03;
@@ -140,7 +149,7 @@ function params = init_dict_parameters(num_dim, num_data)
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
 %     params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
-    params.nz_in_dict = 0.10; % number of nonzeros in each dictionary element
+    params.nz_in_dict = 0.010; % number of nonzeros in each dictionary element
     % 
     params.lambda_D = 3e-2; % group sparsity
     %     
@@ -203,9 +212,16 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         %
         count_inferences = count_inferences + 1;
         %         
-        x = X(curr_data_idx, :);
+        x = X(curr_data_idx, :);        
         y = Y(curr_data_idx, 1);
         %
+        if model.is_dictionary_coding
+            [c, error, correlation] = sparse_coding(x', model.dict_model.D, model.dict_model.params);
+            x = c';
+            error
+            correlation
+        end
+        %         
         reward_inference = zeros(model.num_arms, 1);
         %         
         for curr_arm_idx =1:model.num_arms
@@ -288,9 +304,9 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
         model.v = 0.25;
         model.f{curr_arm} = zeros(context_size, 1);
     end
-    %    
-%     model.semisupervision_factor = 20;
-    model.semisupervision_factor = 100;
+    %
+    model.semisupervision_factor = 5;
+%     model.semisupervision_factor = 100;
     % 
 end
 
