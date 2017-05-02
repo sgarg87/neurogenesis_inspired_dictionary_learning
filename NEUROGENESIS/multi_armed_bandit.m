@@ -1,4 +1,6 @@
 function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cycles, is_dictionary_coding, is_semi_supervised, is_weighted_rewards)
+    %
+    %     
     % Y is supposed to be a vector, rather than a matrix.
     % However, we keep capital case for it, so as to have 
     % correspondingly x and y for a single data and the ground truth y.
@@ -85,6 +87,8 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
 end
 
 function [dict_model] = get_dictionary_codes(X)
+    %
+    %     
     addpath('evaluation_functionality/');
     addpath 'ElasticNet/';
     %
@@ -96,7 +100,8 @@ function [dict_model] = get_dictionary_codes(X)
     X = X';
     %
     % initialize
-    curr_dict_size = 1500;
+    curr_dict_size = 3000;
+%     curr_dict_size = 300;
     curr_dictionary_sizes = [curr_dict_size];
     params = init_dict_parameters(num_dim, num_data);
     %
@@ -134,22 +139,26 @@ function [dict_model] = get_dictionary_codes(X)
 end
 
 function params = init_dict_parameters(num_dim, num_data)
+    %
+    %     
     params = init_parameters();
     %     
     params.data_set_name = 'multiarmedbandit';  % patches vs images
     %     
     params.n = num_dim;  % input size
-    %     
-    params.T = floor(num_data*0.99);  % total number of iterations/data samples
+    %
+    params.T = floor(num_data*0.8);  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
-    params.nonzero_frac = 0.1;
+    params.nonzero_frac = 0.3;
 %     params.nonzero_frac = 0.03;
     %     
     % proximal vs LARS
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
+%     
 %     params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
-    params.nz_in_dict = 0.010; % number of nonzeros in each dictionary element
+%     params.nz_in_dict = 0.10; % number of nonzeros in each dictionary element
+    params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
     % 
     params.lambda_D = 3e-2; % group sparsity
     %     
@@ -186,6 +195,8 @@ function params = init_dict_parameters(num_dim, num_data)
 end
 
 function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model)
+    %
+    %     
     loss = 0;
     %     
     loss_arms = zeros(model.num_arms, 1);
@@ -228,15 +239,22 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
             % sample the weights from the normal distribution
             mu = model.mu{curr_arm_idx};
             %
-            try
-                Sigma = model.Binv{curr_arm_idx}*power(model.v, 2);
-                w{curr_arm_idx} = mvnrnd(mu, Sigma)';
-            catch exception
-                tic;
-                model.Binv{curr_arm_idx} = nearestSPD(model.Binv{curr_arm_idx});
-                fprintf('\n Time to nearest SPD: %f', toc);
-                Sigma = model.Binv{curr_arm_idx}*power(model.v, 2);
-                w{curr_arm_idx} = mvnrnd(mu, Sigma)';
+            if model.is_approximate_sampling
+                    tic;
+                    w_rnd = mvnrnd(model.mu_zero, model.B_eye)';
+                    w{curr_arm_idx} = mu + lsqr(model.Bchol{curr_arm_idx}', w_rnd)*model.v;
+                    fprintf('\n Time to approximate sampling: %f.\n', toc);
+            else
+                try
+                    Sigma = model.Binv{curr_arm_idx}*power(model.v, 2);
+                    w{curr_arm_idx} = mvnrnd(mu, Sigma)';
+                catch exception
+                    tic;
+                    model.Binv{curr_arm_idx} = nearestSPD(model.Binv{curr_arm_idx});
+                    fprintf('\n Time to nearest SPD: %f', toc);
+                    Sigma = model.Binv{curr_arm_idx}*power(model.v, 2);
+                    w{curr_arm_idx} = mvnrnd(mu, Sigma)';
+                end
             end
             %             
             reward_inference(curr_arm_idx, 1) = x*w{curr_arm_idx};
@@ -260,6 +278,10 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
             reward = 0;
             loss = loss + model.p(y);
             loss_arms(y, 1) = loss_arms(y, 1) + 1;
+            % 
+            if model.num_arms == 2
+                max_reward_arm = y;
+            end
         end
         %
         %         
@@ -267,18 +289,25 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         %         
         fprintf('\n loss ratio: %f', (loss/count_inferences));
         %         
-        if reward == 1
+        if (max_reward_arm == y)
             x_expr_fr_B_update = x'*x;
             model.B{max_reward_arm} = model.B{max_reward_arm} + x_expr_fr_B_update;
             clear x_expr_fr_B_update;
+            %
+            if model.is_approximate_sampling
+                tic;
+                model.Bchol{max_reward_arm} = cholupdate(model.Bchol{max_reward_arm}, x', '+');
+                fprintf('\n time to update cholsky factorization: %f. \n', toc);
+            end
+            %         
             tic;
             model.Binv{max_reward_arm} = inv(model.B{max_reward_arm});
             fprintf('\n time to inverse: %f', toc);
-            %         
+            %             
             x_expr_fr_f_update = x'*reward;
             model.f{max_reward_arm} = model.f{max_reward_arm} + x_expr_fr_f_update;
             clear x_expr_fr_f_update;
-            %         
+            %
             model.mu{max_reward_arm} = model.Binv{max_reward_arm}*model.f{max_reward_arm};
             %         
         end
@@ -290,27 +319,41 @@ end
 
 
 function model = initialize_arms_model(num_arms, context_size, is_semi_supervised, p)
+    %
+    %     
     model.num_arms = num_arms;
     model.context_size = context_size;
     model.is_semi_supervised = is_semi_supervised;
     model.p = p;
     % 
+    model.is_approximate_sampling = true;
+    %     
+    model.mu_zero = zeros(context_size, 1); 
+    model.B_eye = eye(context_size);
+    %         
     for curr_arm = 1:num_arms
         model.mu{curr_arm} = zeros(context_size, 1); 
         model.B{curr_arm} = eye(context_size);
         model.Binv{curr_arm} = inv(model.B{curr_arm});
+        %
+        if model.is_approximate_sampling
+            model.Bchol{curr_arm} = chol(model.B{curr_arm});
+        end
         %         
         % thompson sampling parameter
         model.v = 0.25;
         model.f{curr_arm} = zeros(context_size, 1);
     end
     %
-    model.semisupervision_factor = 5;
+    model.semisupervision_factor = 20;
+%     model.semisupervision_factor = 5;
 %     model.semisupervision_factor = 100;
     % 
 end
 
 function [X, Y] = get_data(data_set_name)
+    %
+    %     
     %
     if (data_set_name == 1)
         load cnae;
@@ -326,8 +369,16 @@ function [X, Y] = get_data(data_set_name)
         Y = semantic_paths_binary.labels;
     elseif (data_set_name == 4)
         load semantic_path_kernel_hash_code;
-        X = semantic_path_kernel_hash_code.data(:, 1:30); 
+        X = semantic_path_kernel_hash_code.data(:, 1:30);
         Y = semantic_path_kernel_hash_code.labels;
+    elseif (data_set_name == 5)
+        load internetad;
+        X = internetad.data; 
+        Y = internetad.labels;
+    elseif (data_set_name == 6)
+        load pokerhand;
+        X = pokerhand.data; 
+        Y = pokerhand.labels;
     else
         assert false;
     end
