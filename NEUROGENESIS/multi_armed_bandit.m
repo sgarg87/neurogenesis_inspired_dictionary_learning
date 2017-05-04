@@ -37,6 +37,8 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
         if ((curr_idx == 1) || (~ is_stationary))
             model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p);
             %
+            model.is_weighted_rewards = is_weighted_rewards;
+            %             
             model.is_dictionary_coding = is_dictionary_coding;
             %             
             if is_dictionary_coding
@@ -61,6 +63,7 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     model.loss = loss;
     %     
     fprintf('\n Mean Loss is %f.\n', mean(loss));
+    fprintf('\n std Loss is %f.\n', std(loss));
     %
     %
     if model.num_arms == 2
@@ -100,7 +103,7 @@ function [dict_model] = get_dictionary_codes(X)
     X = X';
     %
     % initialize
-    curr_dict_size = 3000;
+    curr_dict_size = 2000;
 %     curr_dict_size = 300;
     curr_dictionary_sizes = [curr_dict_size];
     params = init_dict_parameters(num_dim, num_data);
@@ -149,7 +152,7 @@ function params = init_dict_parameters(num_dim, num_data)
     %
     params.T = floor(num_data*0.8);  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
-    params.nonzero_frac = 0.3;
+    params.nonzero_frac = 0.8;
 %     params.nonzero_frac = 0.03;
     %     
     % proximal vs LARS
@@ -158,11 +161,11 @@ function params = init_dict_parameters(num_dim, num_data)
 %     
 %     params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
 %     params.nz_in_dict = 0.10; % number of nonzeros in each dictionary element
-    params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+    params.nz_in_dict = 0.030; % number of nonzeros in each dictionary element
     % 
     params.lambda_D = 3e-2; % group sparsity
     %     
-    params.is_sparse_data = true;
+    params.is_sparse_data = false;
     %     
     params.new_elements = 50;  % new elements added per each batch of data
     %         
@@ -240,10 +243,21 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
             mu = model.mu{curr_arm_idx};
             %
             if model.is_approximate_sampling
+%                 old code
+%                     tic;
+%                     w_rnd = mvnrnd(model.mu_zero, model.B_eye)';
+%                     w{curr_arm_idx} = mu + lsqr(model.Bchol{curr_arm_idx}', w_rnd)*model.v;
+%                     fprintf('\n Time to approximate sampling: %f.\n', toc);
+                    %            
+                    % new code        
                     tic;
-                    w_rnd = mvnrnd(model.mu_zero, model.B_eye)';
-                    w{curr_arm_idx} = mu + lsqr(model.Bchol{curr_arm_idx}', w_rnd)*model.v;
-                    fprintf('\n Time to approximate sampling: %f.\n', toc);
+%                     w_rnd = mvnrnd(model.mu_zero, model.B_eye)';
+                    w_rnd = randn(model.context_size, 1);
+%                     fprintf('\n Time to random sampling: %f.\n', toc);
+%                     tic;
+                    w{curr_arm_idx} = mu + (model.Bcholinv{curr_arm_idx}')*w_rnd*model.v;
+%                     fprintf('\n Time to project the sampling: %f.\n', toc);
+                    fprintf('\n Time to sampling: %f.\n', toc);
             else
                 try
                     Sigma = model.Binv{curr_arm_idx}*power(model.v, 2);
@@ -298,11 +312,17 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
                 tic;
                 model.Bchol{max_reward_arm} = cholupdate(model.Bchol{max_reward_arm}, x', '+');
                 fprintf('\n time to update cholsky factorization: %f. \n', toc);
+                tic;
+                model.Bcholinv{max_reward_arm} = inv(model.Bchol{max_reward_arm});
+                fprintf('\n time to chol inverse: %f', toc);
+                tic;
+                model.Binv{max_reward_arm} = (model.Bcholinv{max_reward_arm})*(model.Bcholinv{max_reward_arm})';
+                fprintf('\n time to inverse: %f', toc);
+            else
+                tic;
+                model.Binv{max_reward_arm} = inv(model.B{max_reward_arm});
+                fprintf('\n time to inverse: %f', toc);
             end
-            %         
-            tic;
-            model.Binv{max_reward_arm} = inv(model.B{max_reward_arm});
-            fprintf('\n time to inverse: %f', toc);
             %             
             x_expr_fr_f_update = x'*reward;
             model.f{max_reward_arm} = model.f{max_reward_arm} + x_expr_fr_f_update;
@@ -334,10 +354,12 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
     for curr_arm = 1:num_arms
         model.mu{curr_arm} = zeros(context_size, 1); 
         model.B{curr_arm} = eye(context_size);
-        model.Binv{curr_arm} = inv(model.B{curr_arm});
-        %
+        %         
         if model.is_approximate_sampling
             model.Bchol{curr_arm} = chol(model.B{curr_arm});
+            model.Bcholinv{curr_arm} = inv(model.Bchol{curr_arm});
+        else
+            model.Binv{curr_arm} = inv(model.B{curr_arm});
         end
         %         
         % thompson sampling parameter
@@ -379,6 +401,14 @@ function [X, Y] = get_data(data_set_name)
         load pokerhand;
         X = pokerhand.data; 
         Y = pokerhand.labels;
+    elseif (data_set_name == 7)
+        load cifar;
+        X = cifar.data; 
+        Y = cifar.labels;
+    elseif (data_set_name == 8)
+        load fao;
+        X = fao.data; 
+        Y = fao.labels;
     else
         assert false;
     end

@@ -29,10 +29,10 @@ function [data_train, data_test, num_pixels] = cifar_images_online(is_preprocess
     assert (num_pixels == size(data_test, 1));
     assert (size(data_test, 2) == 10000);
     %     
-    if num_data_per_label ~= -1 
+    if num_data_per_label ~= -1
         data_test = data_test(:, 1:(100/num_data_per_label):end);
     end
-    %     
+    %
     data_test = postprocess(data_test);
 end
 
