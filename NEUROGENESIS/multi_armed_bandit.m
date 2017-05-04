@@ -126,21 +126,32 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
     dict_model = initialize_D_A_B(curr_dictionary_sizes, params);
     %     
     dict_model.D = dict_model.D{curr_dict_size};
-    dict_model.A = dict_model.A{curr_dict_size};
-    dict_model.B = dict_model.B{curr_dict_size};
+    dict_model.A = 1e-10*ones(curr_dict_size, curr_dict_size);
+%     dict_model.A = dict_model.A{curr_dict_size};
+    dict_model.B = 1e-10*ones(size(dict_model.D));
+%     dict_model.B = dict_model.B{curr_dict_size};
     % 
     if params.T ~= 0
         % learn the model, online on the data
         X_dict_lrn = datasample(X, params.T, 2, 'Replace', false);
         %     
         if params.is_mairal
-            [dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
+            [dict_model.D, dict_model.A, dict_model.B, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
         else
-            [dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
+            [dict_model.D, dict_model.A, dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
         end
         %
-        % removing zero elements from the dictionary
-        dict_model.D = dict_model.D(:, find(sum(dict_model.D) ~= 0));
+%         random initialize zero elements
+%         zero_idx = find(sum(dict_model.D) == 0);
+%         dict_model.D(:, zero_idx) = normalize(rand(size(dict_model.D, 1), length(zero_idx)));
+%         clear zero_idx;
+        %         
+%         % removing zero elements from the dictionary
+        nonzero_idx = find(sum(dict_model.D) ~= 0);
+        dict_model.D = dict_model.D(:, nonzero_idx);
+        dict_model.A = dict_model.A(nonzero_idx, nonzero_idx);
+        dict_model.B = dict_model.B(:, nonzero_idx);
+        clear nonzero_idx;
     end
     %     
     dict_model.params = params;
@@ -168,7 +179,7 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
     %     
     params.n = num_dim;  % input size
     %
-    params.T = max(200, floor(num_data*0.1));  % total number of iterations/data samples
+    params.T = max(200, floor(num_data*0.01));  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
     %     
     if data_set_name == 1 %CNAE
@@ -242,7 +253,7 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
     params.is_conditional_neurogenesis = true;
     params.errthresh = 0.1;
     %     
-    params.is_reinitialize_dictionary_fixed_size = true;
+    params.is_reinitialize_dictionary_fixed_size = false;
     %     
     % initialization of the A, B matrices (prior brain memory)
     params.is_init_A = false;
@@ -293,9 +304,9 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
                 % 
                 %
                 if model.dict_model.params.is_mairal
-                    [model.dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
                 else
-                    [model.dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
                 end
                 %                 
                 clear X_dict_lrn;
