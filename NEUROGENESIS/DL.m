@@ -201,9 +201,9 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
             if params.is_reinitialize_dictionary_fixed_size
                 % sahil added code block for random initialization of zero columns (non-group sparsity) 
                 % and then relearn (as suggested in Mairal 2009).
-                display('Random initialization of zero columns and then relearning.');
                 [~,zero_idx] = find(~sum(abs(D)));
                 if ~isempty(zero_idx)
+                    display('Random initialization of zero columns and then relearning.');
                     D(:, zero_idx) = normalize(rand(n,length(zero_idx)));
                     A = A - code*code';
                     B = B - x*code';

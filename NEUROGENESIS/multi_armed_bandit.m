@@ -9,7 +9,7 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     [X, Y] = get_data(data_set_name);
     %
     if is_dictionary_coding
-        dict_model = get_dictionary_codes(X);
+        dict_model = get_dictionary_codes(X, data_set_name);
     else
         dict_model = [];
     end
@@ -35,7 +35,7 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     %     
     for curr_idx =1:num_cycles
         if ((curr_idx == 1) || (~ is_stationary))
-            model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p);
+            model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p, data_set_name);
             %
             model.is_weighted_rewards = is_weighted_rewards;
             %             
@@ -89,13 +89,11 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     save model model;
 end
 
-function [dict_model] = get_dictionary_codes(X)
-    %
+function [dict_model] = get_dictionary_codes(X, data_set_name)
     %     
     addpath('evaluation_functionality/');
     addpath 'ElasticNet/';
     %
-    is_mairal = true;
     %     
     num_dim = size(X, 2);
     num_data = size(X, 1);
@@ -103,10 +101,26 @@ function [dict_model] = get_dictionary_codes(X)
     X = X';
     %
     % initialize
-    curr_dict_size = 2000;
-%     curr_dict_size = 300;
+    %     
+    if data_set_name == 1 %CNAE
+        curr_dict_size = 3000;
+    elseif data_set_name == 2 %Covertype
+        curr_dict_size = 300;
+    elseif data_set_name == 6 %Poker
+        curr_dict_size = 100;
+    elseif data_set_name == 5 %Internet Ad click
+        curr_dict_size = 3000;
+    elseif data_set_name == 4 %Kernel hash codes
+        curr_dict_size = 100;
+    elseif data_set_name == 8 %FAO
+        curr_dict_size = 2000;
+    else
+        assert false;
+    end
+    % 
+    %     
     curr_dictionary_sizes = [curr_dict_size];
-    params = init_dict_parameters(num_dim, num_data);
+    params = init_dict_parameters(num_dim, num_data, data_set_name);
     %
     % initialize model    
     dict_model = initialize_D_A_B(curr_dictionary_sizes, params);
@@ -115,17 +129,19 @@ function [dict_model] = get_dictionary_codes(X)
     dict_model.A = dict_model.A{curr_dict_size};
     dict_model.B = dict_model.B{curr_dict_size};
     % 
-    % learn the model, online on the data
-    X_dict_lrn = datasample(X, params.T, 2, 'Replace', false);
-    %     
-    if is_mairal
-        [dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
-    else
-        [dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
+    if params.T ~= 0
+        % learn the model, online on the data
+        X_dict_lrn = datasample(X, params.T, 2, 'Replace', false);
+        %     
+        if params.is_mairal
+            [dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
+        else
+            [dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
+        end
+        %
+        % removing zero elements from the dictionary
+        dict_model.D = dict_model.D(:, find(sum(dict_model.D) ~= 0));
     end
-    %
-    % removing zero elements from the dictionary    
-    dict_model.D = dict_model.D(:, find(sum(dict_model.D) ~= 0));
     %     
     dict_model.params = params;
     dict_model.dictionary_sizes = curr_dictionary_sizes;
@@ -141,35 +157,82 @@ function [dict_model] = get_dictionary_codes(X)
 %     C = C';
 end
 
-function params = init_dict_parameters(num_dim, num_data)
+function params = init_dict_parameters(num_dim, num_data, data_set_name)
     %
     %     
     params = init_parameters();
+    %     
+    params.is_mairal = true;
     %     
     params.data_set_name = 'multiarmedbandit';  % patches vs images
     %     
     params.n = num_dim;  % input size
     %
-    params.T = floor(num_data*0.8);  % total number of iterations/data samples
+    params.T = max(200, floor(num_data*0.1));  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
-    params.nonzero_frac = 0.8;
-%     params.nonzero_frac = 0.03;
+    %     
+    if data_set_name == 1 %CNAE
+        params.nonzero_frac = 0.1;
+    elseif data_set_name == 2 %Covertype
+        params.nonzero_frac = 0.1;
+    elseif data_set_name == 6 %Poker
+        params.nonzero_frac = 1;
+    elseif data_set_name == 5 %Internet Ad click
+        params.nonzero_frac = 0.03;
+    elseif data_set_name == 4 %Kernel hash codes
+        params.nonzero_frac = 2.5;
+    elseif data_set_name == 8 %FAO
+        params.nonzero_frac = 0.2;
+    else
+        assert false;
+    end
+    % 
     %     
     % proximal vs LARS
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
-%     
-%     params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
-%     params.nz_in_dict = 0.10; % number of nonzeros in each dictionary element
-    params.nz_in_dict = 0.030; % number of nonzeros in each dictionary element
+    %     
+    %     
+    if data_set_name == 1 %CNAE
+        params.nz_in_dict = 0.005;
+    elseif data_set_name == 2 %Covertype
+        params.nz_in_dict = 0.1;
+    elseif data_set_name == 6 %Poker
+        params.nz_in_dict = 0.3;
+    elseif data_set_name == 5 %Internet Ad click
+        params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+    elseif data_set_name == 4 %Kernel hash codes
+        params.nz_in_dict = 0.1; % number of nonzeros in each dictionary element
+    elseif data_set_name == 8 %FAO
+        params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+    else
+        assert false;
+    end
+    %     
     % 
     params.lambda_D = 3e-2; % group sparsity
     %     
-    params.is_sparse_data = false;
+    %     
+    if data_set_name == 1 %CNAE
+        params.is_sparse_data = true;
+    elseif data_set_name == 2 %Covertype
+        params.is_sparse_data = true;
+    elseif data_set_name == 6 %Poker
+        params.is_sparse_data = true;
+    elseif data_set_name == 5 %Internet Ad click
+        params.is_sparse_data = true;
+    elseif data_set_name == 4 %Kernel hash codes
+        params.is_sparse_data = true;
+    elseif data_set_name == 8 %FAO
+        params.is_sparse_data = false;
+    else
+        assert false;
+    end
+    %
     %     
     params.new_elements = 50;  % new elements added per each batch of data
     %         
-    params.batch_size = 200;  % batch size
+    params.batch_size = min(params.T, 200);  % batch size
     %     
     assert(params.batch_size <= params.T);
     %
@@ -179,7 +242,7 @@ function params = init_dict_parameters(num_dim, num_data)
     params.is_conditional_neurogenesis = true;
     params.errthresh = 0.1;
     %     
-    params.is_reinitialize_dictionary_fixed_size = false;
+    params.is_reinitialize_dictionary_fixed_size = true;
     %     
     % initialization of the A, B matrices (prior brain memory)
     params.is_init_A = false;
@@ -211,11 +274,35 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
     %     
     count_inferences = 0;
     %
-    %     
+    % 
     % later on, process a batch of data, and include the module
     % for adaptation in a separate function
+    %     
     for curr_data_idx = 1:num_data
         %         
+        %
+        if model.is_dictionary_coding
+            if (mod(curr_data_idx, model.online_dict_update_batch_size) == 0)
+                fprintf('\n *********************%d***********************', curr_data_idx);
+                %                 
+                X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
+                %
+                model.dict_model.params.batch_size = model.online_dict_update_batch_size;
+                model.dict_model.params.T = model.online_dict_update_batch_size;
+                model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
+                % 
+                %
+                if model.dict_model.params.is_mairal
+                    [model.dict_model.D, ~, ~, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                else
+                    [model.dict_model.D, ~, ~, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                end
+                %                 
+                clear X_dict_lrn;
+            end
+        end
+        %         
+        % 
         if model.is_semi_supervised
             if (mod(curr_data_idx, model.semisupervision_factor) ~= 1)
                 continue;
@@ -338,7 +425,7 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
 end
 
 
-function model = initialize_arms_model(num_arms, context_size, is_semi_supervised, p)
+function model = initialize_arms_model(num_arms, context_size, is_semi_supervised, p, data_set_name)
     %
     %     
     model.num_arms = num_arms;
@@ -367,10 +454,23 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
         model.f{curr_arm} = zeros(context_size, 1);
     end
     %
-    model.semisupervision_factor = 20;
-%     model.semisupervision_factor = 5;
-%     model.semisupervision_factor = 100;
+    if data_set_name == 1 %CNAE
+        model.semisupervision_factor = 2;
+    elseif data_set_name == 2 %Covertype
+        model.semisupervision_factor = 100;
+    elseif data_set_name == 6 %Poker
+        model.semisupervision_factor = 20;
+    elseif data_set_name == 5 %Internet Ad click
+        model.semisupervision_factor = 5;
+    elseif data_set_name == 4 %Kernel hash codes
+        model.semisupervision_factor = 20;
+    elseif data_set_name == 8 %FAO
+        model.semisupervision_factor = 20;
+    else
+        assert false;
+    end
     % 
+    model.online_dict_update_batch_size = 200;
 end
 
 function [X, Y] = get_data(data_set_name)

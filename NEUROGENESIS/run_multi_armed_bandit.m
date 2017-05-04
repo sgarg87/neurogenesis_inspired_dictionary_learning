@@ -1,47 +1,65 @@
 % 
+num_trials = 10;
 % 
-% kernel based hash codes for semantic paths
 % 
+% CNAE
 % rng(0);
-% [model, ~] = multi_armed_bandit(false, 4, 25, false, true, true);
-% save model_hashcodes model;
-% % 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 4, 25, true, true, true);
-% save model_hashcodes_dict model;
-% 
-% 
-% internet ad click UCI data set
-% 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 5, 10, false, true, false);
-% save model_adclick model;
-% % 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 5, 10, true, true, false);
-% save model_adclick_dict model;
-% 
-% 
-% CIFAR images
-% 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 7, 10, false, true, false);
-% save model_cifar model;
+% [model, ~] = multi_armed_bandit(false, 1, num_trials, false, true, false);
+% save model_cnae model;
 % 
 rng(0);
-[model, ~] = multi_armed_bandit(false, 7, 10, true, true, false);
-save model_cifar_dict model;
-%
+[model, ~] = multi_armed_bandit(false, 1, num_trials, true, true, false);
+save model_cnae_dict model;
 % 
 % 
-% Our images
+% cover type
+rng(0);
+[model, ~] = multi_armed_bandit(false, 2, num_trials, false, true, false);
+save model_covertype model;
 % 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 8, 10, false, true, false);
-% save model_fao model;
+rng(0);
+[model, ~] = multi_armed_bandit(false, 2, num_trials, true, true, false);
+save model_covertype_dict model;
 % 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 8, 10, true, true, false);
-% save model_fao_dict model;
+% 
+% Poker
+rng(0);
+[model, ~] = multi_armed_bandit(false, 6, num_trials, false, true, false);
+save model_poker model;
+% 
+rng(0);
+[model, ~] = multi_armed_bandit(false, 6, num_trials, true, true, false);
+save model_poker_dict model;
+% 
+% 
+% Kernel based hash codes for semantic paths
+rng(0);
+[model, ~] = multi_armed_bandit(false, 4, num_trials, false, true, false);
+save model_hashcodes model;
+% 
+rng(0);
+[model, ~] = multi_armed_bandit(false, 4, num_trials, true, true, false);
+save model_hashcodes_dict model;
+% 
+% 
+% Internet ad click UCI data set
+% 
+rng(0);
+[model, ~] = multi_armed_bandit(false, 5, num_trials, false, true, false);
+save model_adclick model;
+% 
+rng(0);
+[model, ~] = multi_armed_bandit(false, 5, num_trials, true, true, false);
+save model_adclick_dict model;
+% 
+% 
+% FAO images
+rng(0);
+[model, ~] = multi_armed_bandit(false, 8, num_trials, false, true, false);
+save model_fao model;
+% 
+rng(0);
+[model, ~] = multi_armed_bandit(false, 8, num_trials, true, true, false);
+save model_fao_dict model;
 
 
