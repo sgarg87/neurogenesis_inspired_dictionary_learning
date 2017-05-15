@@ -9,7 +9,15 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     [X, Y] = get_data(data_set_name);
     %
     if is_dictionary_coding
-        dict_model = get_dictionary_codes(X, data_set_name);
+        assert (data_set_name == 2);
+        load model_covertype_dict_100th_25.mat;
+        dict_model = model.dict_model;
+        clear model;
+% 
+%         dict_model = get_dictionary_codes(X, data_set_name);
+%         dict_model = adapt_dict_online(X, Y, dict_model);
+% 
+% 
     else
         dict_model = [];
     end
@@ -103,13 +111,15 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
     % initialize
     %     
     if data_set_name == 1 %CNAE
-        curr_dict_size = 3000;
+        curr_dict_size = 2000;
     elseif data_set_name == 2 %Covertype
+%         curr_dict_size = 100;
         curr_dict_size = 300;
     elseif data_set_name == 6 %Poker
         curr_dict_size = 100;
     elseif data_set_name == 5 %Internet Ad click
-        curr_dict_size = 3000;
+%         curr_dict_size = 3000;
+        curr_dict_size = 200;
     elseif data_set_name == 4 %Kernel hash codes
         curr_dict_size = 100;
     elseif data_set_name == 8 %FAO
@@ -153,6 +163,8 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
         dict_model.B = dict_model.B(:, nonzero_idx);
         clear nonzero_idx;
     end
+    %
+    dict_model.D_prelearn = dict_model.D;
     %     
     dict_model.params = params;
     dict_model.dictionary_sizes = curr_dictionary_sizes;
@@ -169,7 +181,6 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
 end
 
 function params = init_dict_parameters(num_dim, num_data, data_set_name)
-    %
     %     
     params = init_parameters();
     %     
@@ -185,7 +196,8 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
     if data_set_name == 1 %CNAE
         params.nonzero_frac = 0.1;
     elseif data_set_name == 2 %Covertype
-        params.nonzero_frac = 0.1;
+%         params.nonzero_frac = 0.1;
+        params.nonzero_frac = 1.0;
     elseif data_set_name == 6 %Poker
         params.nonzero_frac = 1;
     elseif data_set_name == 5 %Internet Ad click
@@ -240,6 +252,7 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         assert false;
     end
     %
+    %
     %     
     params.new_elements = 50;  % new elements added per each batch of data
     %         
@@ -269,7 +282,43 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
     %
     params.is_patch_encoding = false;
     %     
+    params.online_dict_update_batch_size = 200;
 end
+
+
+function [dict_model] = adapt_dict_online(X, Y, dict_model)
+    %     
+    num_data = size(X, 1);
+    assert (num_data == size(Y, 1));
+    assert (size(Y, 2) == 1);
+    %     
+    for curr_data_idx = 1:num_data
+        %
+        if (mod(curr_data_idx, dict_model.params.online_dict_update_batch_size) == 0)
+            fprintf('\n *********************%d***********************', curr_data_idx);
+            %                 
+            X_dict_lrn = X(curr_data_idx-dict_model.params.online_dict_update_batch_size+1:curr_data_idx, :)';
+            %
+            dict_model.params.batch_size = dict_model.params.online_dict_update_batch_size;
+            dict_model.params.T = dict_model.params.online_dict_update_batch_size;
+            dict_model.params.is_reinitialize_dictionary_fixed_size = false;
+            % 
+            %
+            if dict_model.params.is_mairal
+                [dict_model.D, dict_model.A, dict_model.B, ~, ~] = mairal(X_dict_lrn, dict_model.D, dict_model.params, dict_model.A, dict_model.B);
+            else
+                [dict_model.D, dict_model.A, dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, dict_model.params, dict_model.A, dict_model.B);
+            end
+            %
+            clear X_dict_lrn;
+            %
+            dict_model.D_adaptedversions{curr_data_idx} = dict_model.D;
+        end
+        %         
+        % 
+    end
+end
+
 
 function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model)
     %
@@ -288,28 +337,34 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
     % 
     % later on, process a batch of data, and include the module
     % for adaptation in a separate function
+    %
+    if model.is_dictionary_coding
+        D = model.dict_model.D_prelearn;
+    end
     %     
     for curr_data_idx = 1:num_data
         %         
         %
         if model.is_dictionary_coding
-            if (mod(curr_data_idx, model.online_dict_update_batch_size) == 0)
-                fprintf('\n *********************%d***********************', curr_data_idx);
-                %                 
-                X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
-                %
-                model.dict_model.params.batch_size = model.online_dict_update_batch_size;
-                model.dict_model.params.T = model.online_dict_update_batch_size;
-                model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
-                % 
-                %
-                if model.dict_model.params.is_mairal
-                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
-                else
-                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
-                end
-                %                 
-                clear X_dict_lrn;
+            %             
+            if (mod(curr_data_idx, model.dict_model.params.online_dict_update_batch_size) == 0)
+                D = model.dict_model.D_adaptedversions{curr_data_idx};
+%                 fprintf('\n *********************%d***********************', curr_data_idx);
+%                 %                 
+%                 X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
+%                 %
+%                 model.dict_model.params.batch_size = model.online_dict_update_batch_size;
+%                 model.dict_model.params.T = model.online_dict_update_batch_size;
+%                 model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
+%                 % 
+%                 %
+%                 if model.dict_model.params.is_mairal
+%                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+%                 else
+%                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+%                 end
+%                 %                 
+%                 clear X_dict_lrn;
             end
         end
         %         
@@ -328,7 +383,7 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         y = Y(curr_data_idx, 1);
         %
         if model.is_dictionary_coding
-            [c, error, correlation] = sparse_coding(x', model.dict_model.D, model.dict_model.params);
+            [c, error, correlation] = sparse_coding(x', D, model.dict_model.params);
             x = c';
             error
             correlation
@@ -468,20 +523,42 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
     if data_set_name == 1 %CNAE
         model.semisupervision_factor = 2;
     elseif data_set_name == 2 %Covertype
-        model.semisupervision_factor = 100;
+%         model.semisupervision_factor = 500;
+%         model.semisupervision_factor = 100;
+        model.semisupervision_factor = 30;
     elseif data_set_name == 6 %Poker
-        model.semisupervision_factor = 20;
+        model.semisupervision_factor = 40;
+%         model.semisupervision_factor = 100;
+%         model.semisupervision_factor = 5;
+%         model.semisupervision_factor = 2;
+%         model.semisupervision_factor = 10;
+%         model.semisupervision_factor = 200;
+%         model.semisupervision_factor = 500;
+%         model.semisupervision_factor = 1000;
+%         model.semisupervision_factor = 100;
     elseif data_set_name == 5 %Internet Ad click
         model.semisupervision_factor = 5;
     elseif data_set_name == 4 %Kernel hash codes
+%         model.semisupervision_factor = 20;
+%         model.semisupervision_factor = 5;
+%         model.semisupervision_factor = 2;
+%         model.semisupervision_factor = 100;
+%         model.semisupervision_factor = 20;
+%         model.semisupervision_factor = 30;
+        model.semisupervision_factor = 200;
+%         
+%
+    elseif data_set_name == 3 %binary word frequency strings for semantic paths
         model.semisupervision_factor = 20;
     elseif data_set_name == 8 %FAO
         model.semisupervision_factor = 20;
+%         model.semisupervision_factor = 500;
+%         model.semisupervision_factor = 50;
+%         model.semisupervision_factor = 100;
+%         model.semisupervision_factor = 40;
     else
         assert false;
     end
-    % 
-    model.online_dict_update_batch_size = 200;
 end
 
 function [X, Y] = get_data(data_set_name)

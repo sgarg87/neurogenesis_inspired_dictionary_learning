@@ -1,5 +1,12 @@
 % 
-num_trials = 10;
+% 
+% clear;
+% addpath('./evaluation_functionality/');
+% addpath('./ElasticNet/');
+% 
+% 
+% 
+num_trials = 25;
 % 
 % 
 % CNAE
@@ -13,13 +20,13 @@ num_trials = 10;
 % % 
 % 
 % % cover type
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 2, num_trials, false, true, false);
-% save model_covertype model;
-% 
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 2, num_trials, true, true, false);
-% save model_covertype_dict model;
+rng(0);
+[model, ~] = multi_armed_bandit(false, 2, num_trials, false, true, false);
+save model_covertype model;
+
+rng(0);
+[model, ~] = multi_armed_bandit(false, 2, num_trials, true, true, false);
+save model_covertype_dict model;
 % % 
 % % 
 % % Poker
@@ -27,12 +34,12 @@ num_trials = 10;
 % [model, ~] = multi_armed_bandit(false, 6, num_trials, false, true, false);
 % save model_poker model;
 % % 
-rng(0);
-[model, ~] = multi_armed_bandit(false, 6, num_trials, true, true, false);
-save model_poker_dict model;
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 6, num_trials, true, true, false);
+% save model_poker_dict model;
 % % 
 % % 
-% % Kernel based hash codes for semantic paths
+% % % Kernel based hash codes for semantic paths
 % rng(0);
 % [model, ~] = multi_armed_bandit(false, 4, num_trials, false, true, false);
 % save model_hashcodes model;
@@ -47,7 +54,7 @@ save model_poker_dict model;
 % rng(0);
 % [model, ~] = multi_armed_bandit(false, 5, num_trials, false, true, false);
 % save model_adclick model;
-% % 
+% 
 % rng(0);
 % [model, ~] = multi_armed_bandit(false, 5, num_trials, true, true, false);
 % save model_adclick_dict model;
@@ -63,3 +70,8 @@ save model_poker_dict model;
 % save model_fao_dict model;
 % 
 % 
+% 
+% 
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 3, num_trials, false, true, false);
+% save model_freq_codes model;
