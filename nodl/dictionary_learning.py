@@ -2,6 +2,9 @@ import numpy as np
 import math
 import numpy.linalg as npl
 import numpy.random as npr
+import constants_parameter_names as cpn
+
+# pytorch
 
 
 class DictionaryLearning:
@@ -11,69 +14,53 @@ class DictionaryLearning:
     #
     def __init__(self,
                  alg,
-                 A,
-                 B,
-                 coding_sparse_algo,
-                 code_sparse_nnz_ratio,
-                 is_sparse_dictionary,
-                 dictionary_element_sparse_alg,
-                 dict_sparse_nnz_ratio,
-                 is_sparse_data,
-                 lambda_g,
-                 max_new_elements,
-                 epsilon,
-                 gamma,
-                 is_neurogenesis_conditional,
-                 dict_update_method,
-                 batch_size,
-                 num_samples_fr_processing,
-                 is_grand_mother_neurons
+                 params
+                 # coding_sparse_algo,
+                 # code_sparse_nnz_ratio,
+                 # is_sparse_dictionary,
+                 # dictionary_element_sparse_alg,
+                 # dict_sparse_nnz_ratio,
+                 # is_sparse_data,
+                 # lambda_g,
+                 # max_new_elements,
+                 # epsilon,
+                 # gamma,
+                 # is_neurogenesis_conditional,
+                 # dict_update_method,
+                 # batch_size,
+                 # num_samples_fr_processing,
+                 # is_grand_mother_neurons
     ):
         # dictionary
         self.D = None
-        #
         # algorithm to learn the dictionary
-        self.alg = alg
-        #
-        # memory matrices representing all the data and the corresponding codes in a compact manner
-        self.A = A
-        self.B = B
-        #
-        #
+        self.dict_update_method = alg
         # codes related sparsity settings (so called "sparse coding")
-        self.coding_sparse_algo = coding_sparse_algo
-        self.code_sparse_nnz_ratio = code_sparse_nnz_ratio
-        #
+        self.coding_sparse_algo = params[cpn.coding_sparse_algo]
+        self.code_sparse_nnz_ratio = params[cpn.nonzero_frac]
         # dictionary elements related sparsity settings
-        self.is_sparse_dictionary = is_sparse_dictionary
-        self.dictionary_element_sparse_alg = dictionary_element_sparse_alg
-        self.dict_sparse_nnz_ratio = dict_sparse_nnz_ratio
-        #
+        self.is_sparse_dictionary = params[cpn.is_sparse_dictionary]
+        self.dictionary_element_sparse_alg = params[cpn.dictionary_element_sparse_algo]
+        self.dict_sparse_nnz_ratio = params[cpn.nz_in_dict]
         # if data is sparse, the evaluation metrics and the normalization conditions in the learning may differ.
         # Also, the sparsity of data can be exploited for efficient computations in the code
-        self.is_sparse_data = is_sparse_data
-        #
+        self.is_sparse_data = params[cpn.is_sparse_data]
         # killing of elements
-        self.lambda_g = lambda_g
-        #
+        self.lambda_g = params[cpn.lambda_D]
         # maximum number of elements for the processing of a batch (birth of neurons)
-        self.max_new_elements = max_new_elements
-        #
+        self.max_new_elements = params[cpn.new_elements]
         # convergence threshold for updating of dictionary using the block coordinate decent
-        self.epsilon = epsilon
-        #
+        self.epsilon = params[cpn.epsilon]
         # conditional neurogenesis related settings
-        self.is_neurogenesis_conditional = is_neurogenesis_conditional
+        self.is_neurogenesis_conditional = params[cpn.is_conditional_neurogenesis]
         # upper bound on Pearson correlation for conditional neurogenesis
-        self.gamma = gamma
+        self.gamma = params[cpn.gamma]
+        self.batch_size = params[cpn.batch_size]
+        self.num_samples_fr_processing = params[cpn.T]
+        self.is_grand_mother_neurons = params[cpn.is_grand_mother_neurons]
         #
-        self.dict_update_method = dict_update_method
-        #
-        self.batch_size = batch_size
-        #
-        self.num_samples_fr_processing = num_samples_fr_processing
-        #
-        self.is_grand_mother_neurons = is_grand_mother_neurons
+        self.__initialize_dictionary__()
+        self.__initialize_memory__()
 
     def __initialize_dictionary__(self, n, k):
         self.D = npr.rand(n, k)

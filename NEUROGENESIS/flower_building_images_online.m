@@ -54,6 +54,7 @@ function I = process_image(file_path, image_size, dir_path)
 %     
     if size(I, 3) == 3
         I = rgb2gray(I);
+
     end
 %     
     I = double(I)/255; 

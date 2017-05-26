@@ -5,17 +5,23 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     % However, we keep capital case for it, so as to have 
     % correspondingly x and y for a single data and the ground truth y.
     %     
+    %     
+    is_reconstructed_images_features = true;
+    % 
     % 
     [X, Y] = get_data(data_set_name);
     %
+    %     
     if is_dictionary_coding
-        assert (data_set_name == 2);
-        load model_covertype_dict_100th_25.mat;
-        dict_model = model.dict_model;
-        clear model;
+%         
+%         assert (data_set_name == 7);
+%         load model_cifar_dict_10000_20th.mat;
+%         dict_model = model.dict_model;
+%         clear model;
 % 
-%         dict_model = get_dictionary_codes(X, data_set_name);
-%         dict_model = adapt_dict_online(X, Y, dict_model);
+% 
+        dict_model = get_dictionary_codes(X, data_set_name);
+        dict_model = adapt_dict_online(X, Y, dict_model);
 % 
 % 
     else
@@ -33,7 +39,11 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     end
     % 
     if is_dictionary_coding
-        num_features = size(dict_model.D, 2);
+        if is_reconstructed_images_features
+            num_features = size(X, 2);
+        else
+            num_features = size(dict_model.D, 2);
+        end
     else
         num_features = size(X, 2);
     end
@@ -43,7 +53,7 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     %     
     for curr_idx =1:num_cycles
         if ((curr_idx == 1) || (~ is_stationary))
-            model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p, data_set_name);
+            model = initialize_arms_model(num_arms, num_features, is_semi_supervised, p, data_set_name, is_reconstructed_images_features);
             %
             model.is_weighted_rewards = is_weighted_rewards;
             %             
@@ -117,6 +127,8 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
         curr_dict_size = 300;
     elseif data_set_name == 6 %Poker
         curr_dict_size = 100;
+    elseif data_set_name == 9 %Avalon
+        curr_dict_size = 1000;
     elseif data_set_name == 5 %Internet Ad click
 %         curr_dict_size = 3000;
         curr_dict_size = 200;
@@ -124,6 +136,8 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
         curr_dict_size = 100;
     elseif data_set_name == 8 %FAO
         curr_dict_size = 2000;
+    elseif data_set_name == 7 %CIFAR
+        curr_dict_size = 1000;
     else
         assert false;
     end
@@ -200,12 +214,16 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         params.nonzero_frac = 1.0;
     elseif data_set_name == 6 %Poker
         params.nonzero_frac = 1;
+    elseif data_set_name == 9 %Avalon
+        params.nonzero_frac = 1;
     elseif data_set_name == 5 %Internet Ad click
         params.nonzero_frac = 0.03;
     elseif data_set_name == 4 %Kernel hash codes
         params.nonzero_frac = 2.5;
     elseif data_set_name == 8 %FAO
         params.nonzero_frac = 0.2;
+    elseif data_set_name == 7 %CIFAR
+        params.nonzero_frac = 3;
     else
         assert false;
     end
@@ -222,12 +240,16 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         params.nz_in_dict = 0.1;
     elseif data_set_name == 6 %Poker
         params.nz_in_dict = 0.3;
+    elseif data_set_name == 9 %Avalon
+        params.nz_in_dict = 0.3;
     elseif data_set_name == 5 %Internet Ad click
         params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
     elseif data_set_name == 4 %Kernel hash codes
         params.nz_in_dict = 0.1; % number of nonzeros in each dictionary element
     elseif data_set_name == 8 %FAO
         params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
+    elseif data_set_name == 7 %CIFAR
+        params.nz_in_dict = 0.05; % number of nonzeros in each dictionary element
     else
         assert false;
     end
@@ -241,12 +263,17 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
     elseif data_set_name == 2 %Covertype
         params.is_sparse_data = true;
     elseif data_set_name == 6 %Poker
+        % todo: change it         
         params.is_sparse_data = true;
+    elseif data_set_name == 9 %Avalon
+        params.is_sparse_data = false;
     elseif data_set_name == 5 %Internet Ad click
         params.is_sparse_data = true;
     elseif data_set_name == 4 %Kernel hash codes
         params.is_sparse_data = true;
     elseif data_set_name == 8 %FAO
+        params.is_sparse_data = false;
+    elseif data_set_name == 7 %CIFAR
         params.is_sparse_data = false;
     else
         assert false;
@@ -342,6 +369,8 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         D = model.dict_model.D_prelearn;
     end
     %     
+    count_update = 0;
+    %     
     for curr_data_idx = 1:num_data
         %         
         %
@@ -368,28 +397,41 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
             end
         end
         %         
-        % 
-        if model.is_semi_supervised
-            if (mod(curr_data_idx, model.semisupervision_factor) ~= 1)
-                continue;
-            end
+        %
+        %         
+        if model.is_semi_supervised && (mod(curr_data_idx, model.semisupervision_factor) ~= 1)
+            is_reward_obtained = false;
+        else
+            is_reward_obtained = true;
         end
+        %         
+        %         
+%         if ((~ is_reward_obtained) && (model.is_dictionary_coding))
+        if (~ is_reward_obtained)
+            continue;
+        end
+        % 
+        % 
         %         
         fprintf('\n ................%d..........................', curr_data_idx);
         %
-        count_inferences = count_inferences + 1;
         %         
         x = X(curr_data_idx, :);        
         y = Y(curr_data_idx, 1);
         %
         if model.is_dictionary_coding
             [c, error, correlation] = sparse_coding(x', D, model.dict_model.params);
-            x = c';
+            if model.is_reconstructed_images_features
+                x = (D*c)';
+            else
+                x = c';
+            end
             error
             correlation
         end
         %         
         reward_inference = zeros(model.num_arms, 1);
+        %         
         %         
         for curr_arm_idx =1:model.num_arms
             % sample the weights from the normal distribution
@@ -437,53 +479,74 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         %         
         clear max_reward_inference;
         %
+        %         
+        %
+        %             
+        %       
         % play the arm
-        if (max_reward_arm == y)
-            reward = 1;
-            correct_arms(y, 1) = correct_arms(y, 1) + 1;
+        if is_reward_obtained
+            count_inferences = count_inferences + 1;
+            %             
+            if (max_reward_arm == y)
+                reward = 1;
+                correct_arms(y, 1) = correct_arms(y, 1) + 1;
+            else
+                reward = 0;
+                loss = loss + model.p(y);
+                loss_arms(y, 1) = loss_arms(y, 1) + 1;
+                % 
+    %                 if model.num_arms == 2
+    %                     max_reward_arm = y;
+    %                 end
+            end
         else
             reward = 0;
-            loss = loss + model.p(y);
-            loss_arms(y, 1) = loss_arms(y, 1) + 1;
-            % 
-            if model.num_arms == 2
-                max_reward_arm = y;
-            end
         end
-        %
         %         
+        %         
+        % 
         fprintf('\n reward: %d', reward);
         %         
         fprintf('\n loss ratio: %f', (loss/count_inferences));
+        %
+        %
+        count_update = count_update + 1;
         %         
-        if (max_reward_arm == y)
-            x_expr_fr_B_update = x'*x;
-            model.B{max_reward_arm} = model.B{max_reward_arm} + x_expr_fr_B_update;
-            clear x_expr_fr_B_update;
-            %
-            if model.is_approximate_sampling
-                tic;
-                model.Bchol{max_reward_arm} = cholupdate(model.Bchol{max_reward_arm}, x', '+');
-                fprintf('\n time to update cholsky factorization: %f. \n', toc);
-                tic;
-                model.Bcholinv{max_reward_arm} = inv(model.Bchol{max_reward_arm});
-                fprintf('\n time to chol inverse: %f', toc);
-                tic;
-                model.Binv{max_reward_arm} = (model.Bcholinv{max_reward_arm})*(model.Bcholinv{max_reward_arm})';
-                fprintf('\n time to inverse: %f', toc);
-            else
-                tic;
-                model.Binv{max_reward_arm} = inv(model.B{max_reward_arm});
-                fprintf('\n time to inverse: %f', toc);
-            end
-            %             
-            x_expr_fr_f_update = x'*reward;
-            model.f{max_reward_arm} = model.f{max_reward_arm} + x_expr_fr_f_update;
-            clear x_expr_fr_f_update;
-            %
-            model.mu{max_reward_arm} = model.Binv{max_reward_arm}*model.f{max_reward_arm};
-            %         
-        end
+        % 
+%         x_expr_fr_B_update = x'*x;
+%         model.B{max_reward_arm} = model.B{max_reward_arm} + x_expr_fr_B_update;
+%         clear x_expr_fr_B_update;
+        %
+%         if model.is_approximate_sampling
+        tic;
+        model.Bchol{max_reward_arm} = cholupdate(model.Bchol{max_reward_arm}, x', '+');
+        fprintf('\n time to update cholsky factorization: %f. \n', toc);
+        %
+%         if mod(count_update, model.bandit_batch_size) == 1
+        tic;
+        model.Bcholinv{max_reward_arm} = inv(model.Bchol{max_reward_arm});
+        fprintf('\n time to chol inverse: %f', toc);
+        %
+        tic;
+        model.Binv{max_reward_arm} = (model.Bcholinv{max_reward_arm})*(model.Bcholinv{max_reward_arm})';
+        fprintf('\n time to inverse: %f', toc);
+%         end
+% 
+%         else
+%             tic;
+%             model.Binv{max_reward_arm} = inv(model.B{max_reward_arm});
+%             fprintf('\n time to inverse: %f', toc);
+%         end
+        %             
+        x_expr_fr_f_update = x'*reward;
+        model.f{max_reward_arm} = model.f{max_reward_arm} + x_expr_fr_f_update;
+        clear x_expr_fr_f_update;
+        %
+%         if mod(count_update, model.bandit_batch_size) == 1
+        model.mu{max_reward_arm} = model.Binv{max_reward_arm}*model.f{max_reward_arm};
+%         end
+        %         
+        clear reward;
     end
     %
     loss = loss/count_inferences;
@@ -491,7 +554,7 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
 end
 
 
-function model = initialize_arms_model(num_arms, context_size, is_semi_supervised, p, data_set_name)
+function model = initialize_arms_model(num_arms, context_size, is_semi_supervised, p, data_set_name, is_reconstructed_images_features)
     %
     %     
     model.num_arms = num_arms;
@@ -503,7 +566,11 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
     %     
     model.mu_zero = zeros(context_size, 1); 
     model.B_eye = eye(context_size);
-    %         
+    %
+    %
+    model.is_nonconditional_update = true;
+    %     
+    % 
     for curr_arm = 1:num_arms
         model.mu{curr_arm} = zeros(context_size, 1); 
         model.B{curr_arm} = eye(context_size);
@@ -521,13 +588,15 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
     end
     %
     if data_set_name == 1 %CNAE
-        model.semisupervision_factor = 2;
+        model.semisupervision_factor = 20;
     elseif data_set_name == 2 %Covertype
 %         model.semisupervision_factor = 500;
 %         model.semisupervision_factor = 100;
-        model.semisupervision_factor = 30;
+        model.semisupervision_factor = 20;
+    elseif data_set_name == 9 %
+        model.semisupervision_factor = 20;
     elseif data_set_name == 6 %Poker
-        model.semisupervision_factor = 40;
+        model.semisupervision_factor = 20;
 %         model.semisupervision_factor = 100;
 %         model.semisupervision_factor = 5;
 %         model.semisupervision_factor = 2;
@@ -537,7 +606,7 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
 %         model.semisupervision_factor = 1000;
 %         model.semisupervision_factor = 100;
     elseif data_set_name == 5 %Internet Ad click
-        model.semisupervision_factor = 5;
+        model.semisupervision_factor = 20;
     elseif data_set_name == 4 %Kernel hash codes
 %         model.semisupervision_factor = 20;
 %         model.semisupervision_factor = 5;
@@ -545,7 +614,7 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
 %         model.semisupervision_factor = 100;
 %         model.semisupervision_factor = 20;
 %         model.semisupervision_factor = 30;
-        model.semisupervision_factor = 200;
+        model.semisupervision_factor = 20;
 %         
 %
     elseif data_set_name == 3 %binary word frequency strings for semantic paths
@@ -556,9 +625,16 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
 %         model.semisupervision_factor = 50;
 %         model.semisupervision_factor = 100;
 %         model.semisupervision_factor = 40;
+    elseif data_set_name == 7 %CIFAR
+        model.semisupervision_factor = 20;
     else
         assert false;
     end
+    %     
+    % 
+    model.bandit_batch_size = 10;
+    %
+    model.is_reconstructed_images_features = is_reconstructed_images_features;
 end
 
 function [X, Y] = get_data(data_set_name)
@@ -589,10 +665,18 @@ function [X, Y] = get_data(data_set_name)
         load pokerhand;
         X = pokerhand.data; 
         Y = pokerhand.labels;
+    elseif (data_set_name == 9)
+        load avalon.mat;
+        X = avalon.data; 
+        Y = avalon.labels;
     elseif (data_set_name == 7)
-        load cifar;
-        X = cifar.data; 
-        Y = cifar.labels;
+        %         
+        load cifar.mat;
+%         cifar = get_cifar_data_bandit();
+        %         
+        X = cifar.data(1:10000, :);
+        X = X/255;
+        Y = cifar.labels(1:10000, :);
     elseif (data_set_name == 8)
         load fao;
         X = fao.data; 
