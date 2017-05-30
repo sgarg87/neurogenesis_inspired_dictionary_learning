@@ -6,7 +6,7 @@ clear;
 % 
 % 
 % 
-num_trials = 5;
+num_trials = 25;
 % 
 % 
 % CNAE
@@ -82,14 +82,22 @@ num_trials = 5;
 % save model_cifar_dict model '-v7.3';
 % 
 % 
-% % Avalon data
-rng(0);
-[model, ~] = multi_armed_bandit(false, 9, num_trials, false, true, false);
-save model_avalon model;
+% % % Avalon data
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 9, num_trials, false, true, false);
+% save model_avalon model;
+% % 
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 9, num_trials, true, true, false);
+% save model_avalon_dict model;
+% 
+% 
+% % Warfarin dose data
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 10, num_trials, false, true, false);
+% save model_warfarin model;
 % 
 rng(0);
-[model, ~] = multi_armed_bandit(false, 9, num_trials, true, true, false);
-save model_avalon_dict model;
-% 
-% 
+[model, ~] = multi_armed_bandit(false, 10, num_trials, true, true, false);
+save model_warfarin_dict model;
 

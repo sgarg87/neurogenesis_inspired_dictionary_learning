@@ -14,14 +14,15 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     %     
     if is_dictionary_coding
 %         
-%         assert (data_set_name == 7);
-%         load model_cifar_dict_10000_20th.mat;
-%         dict_model = model.dict_model;
-%         clear model;
+% 
+        assert (data_set_name == 10);
+        load model_warfarin_dict_reconstructed_100.mat;
+        dict_model = model.dict_model;
+        clear model;
 % 
 % 
-        dict_model = get_dictionary_codes(X, data_set_name);
-        dict_model = adapt_dict_online(X, Y, dict_model);
+%         dict_model = get_dictionary_codes(X, data_set_name);
+%         dict_model = adapt_dict_online(X, Y, dict_model);
 % 
 % 
     else
@@ -129,6 +130,8 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
         curr_dict_size = 100;
     elseif data_set_name == 9 %Avalon
         curr_dict_size = 1000;
+    elseif data_set_name == 10 %Warfarin dose
+        curr_dict_size = 100;
     elseif data_set_name == 5 %Internet Ad click
 %         curr_dict_size = 3000;
         curr_dict_size = 200;
@@ -216,6 +219,8 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         params.nonzero_frac = 1;
     elseif data_set_name == 9 %Avalon
         params.nonzero_frac = 1;
+    elseif data_set_name == 10 %Warfarin dose
+        params.nonzero_frac = 1;
     elseif data_set_name == 5 %Internet Ad click
         params.nonzero_frac = 0.03;
     elseif data_set_name == 4 %Kernel hash codes
@@ -242,6 +247,8 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         params.nz_in_dict = 0.3;
     elseif data_set_name == 9 %Avalon
         params.nz_in_dict = 0.3;
+    elseif data_set_name == 10 %Warfarin dose
+        params.nz_in_dict = 0.03;
     elseif data_set_name == 5 %Internet Ad click
         params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
     elseif data_set_name == 4 %Kernel hash codes
@@ -267,6 +274,8 @@ function params = init_dict_parameters(num_dim, num_data, data_set_name)
         params.is_sparse_data = true;
     elseif data_set_name == 9 %Avalon
         params.is_sparse_data = false;
+    elseif data_set_name == 10 %Warfarin dose
+        params.is_sparse_data = true;
     elseif data_set_name == 5 %Internet Ad click
         params.is_sparse_data = true;
     elseif data_set_name == 4 %Kernel hash codes
@@ -595,6 +604,8 @@ function model = initialize_arms_model(num_arms, context_size, is_semi_supervise
         model.semisupervision_factor = 20;
     elseif data_set_name == 9 %
         model.semisupervision_factor = 20;
+    elseif data_set_name == 10 %Warfarin dose
+        model.semisupervision_factor = 100;
     elseif data_set_name == 6 %Poker
         model.semisupervision_factor = 20;
 %         model.semisupervision_factor = 100;
@@ -649,6 +660,10 @@ function [X, Y] = get_data(data_set_name)
         load covertype;
         X = covertype.data;
         Y = covertype.labels;
+    elseif (data_set_name == 10)
+        load warfarin_dose;
+        X = warfarin_dose.data;
+        Y = warfarin_dose.labels;
     elseif (data_set_name == 3)
         load semantic_paths_binary;
         X = semantic_paths_binary.data;
