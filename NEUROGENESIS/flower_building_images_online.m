@@ -8,6 +8,7 @@ function [flowers_data, animals_data, oxford_data] = flower_building_images_onli
     flowers_data = process_image_files(flower_dir_path, flower_image_files, image_size, dir_path);
     clear flower_dir_path flower_image_files;
 %     flowers_data = add_noise(flowers_data);
+    save flowers_data flowers_data;
     %
     animals_dir_path = strcat(dir_path, '../../data/images_dogs_cats/');
     animal_image_files = dir(strcat(animals_dir_path, '*.jpg'));
@@ -16,6 +17,7 @@ function [flowers_data, animals_data, oxford_data] = flower_building_images_onli
     animals_data = process_image_files(animals_dir_path, animal_image_files, image_size, dir_path);
     clear animals_dir_path animal_image_files;
 %     animals_data = add_noise(animals_data);
+    save animals_data animals_data;
     %
 %     oxford_dir_path = strcat(dir_path, '../../data/image data in use/data set 2/all_data_sets/');
     oxford_dir_path = strcat(dir_path, '../../data/oxbuild_images/');
@@ -26,6 +28,7 @@ function [flowers_data, animals_data, oxford_data] = flower_building_images_onli
     oxford_data = oxford_data(:, 1:num_data_per_label);
     clear oxford_dir_path oxford_image_files;
 %     oxford_data = add_noise(oxford_data);
+    save oxford_data oxford_data;
 end
 
 function y_new = add_noise(y)
@@ -54,7 +57,6 @@ function I = process_image(file_path, image_size, dir_path)
 %     
     if size(I, 3) == 3
         I = rgb2gray(I);
-
     end
 %     
     I = double(I)/255; 

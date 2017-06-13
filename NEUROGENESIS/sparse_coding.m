@@ -46,6 +46,8 @@ function [C, err, correl] = sparse_coding(x, D, params)
                 error('no such method for codings sparsity.')
             end
             %
+%             sol'
+            %             
 %             if nnz(sol) == 0
 %                 pause;
 %             end

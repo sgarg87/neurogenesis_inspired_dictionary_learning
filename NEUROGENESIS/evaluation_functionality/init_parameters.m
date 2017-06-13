@@ -62,40 +62,52 @@ function params = init_parameters()
 % 
     params.data_set_name = 'large_image';  % patches vs images
 %     
-    is_small_size = true;
+    is_small_size = false;
     if is_small_size
+%         params.n = 256;  % input size
         params.n = 1024;  % input size
     else
-        params.n = 10000;  % input size
+        params.n = 4096;
+%         params.n = 10000;  % input size
 %     params.n = 65536;  % input size
     end
 %     clear is_large_size;
 %     
-%     params.T = 1900;  % total number of iterations/data samples
-    params.T = 400;  % total number of iterations/data samples
+    params.T = 1900;  % total number of iterations/data samples
+%     params.T = 190;  % total number of iterations/data samples
     params.coding_sparse_algo = 'proximal';
 %     
 %     params.nonzero_frac = 0.0025;
 %     params.nonzero_frac = 0.0500;
 % 
-    params.nonzero_frac = 0.2;
+    params.nonzero_frac = 1000.0;
 %     
     % proximal vs LARS
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
 %     
-    params.nz_in_dict = 0.0050; % number of nonzeros in each dictionary element
+    params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
 %     params.nz_in_dict = 0.010; % number of nonzeros in each dictionary element
 %     
 %     params.dict_element_lam = 1e0;
 % 
     if params.n == 10000
         % for large images 100x100 
-        params.lambda_D = 7e-2; % group sparsity
+        params.lambda_D = 3e-2; % group sparsity
+%         params.lambda_D = 7e-2; % group sparsity
     elseif params.n == 1024
         % for small images 32x32
-        params.lambda_D = 3e-2; % group sparsity
+        params.lambda_D = 1e-2; % group sparsity
     %     params.lambda_D = 3e-3; % group sparsity
+    elseif params.n == 256
+        % for small images 10x10
+        params.lambda_D = 1e-2; % group sparsity
+    elseif params.n == 2500
+        % for small images 10x10
+        params.lambda_D = 3e-2; % group sparsity
+    elseif params.n == 4096
+        % for small images 10x10
+        params.lambda_D = 1e-2; % group sparsity
     else
         assert(false);
     end
@@ -133,11 +145,11 @@ function params = init_parameters()
 %         params.lambda_D = 1e-1; % group sparsity
 %     end
     %
-    params.new_elements = 10;  % new elements added per each batch of data
+    params.new_elements = 50;  % new elements added per each batch of data
 %     params.new_elements = 100;  % new elements added per each batch of data
     %         
-%     params.batch_size = 200;  % batch size
-    params.batch_size = 40;  % batch size
+    params.batch_size = 200;  % batch size
+%     params.batch_size = 20;  % batch size
 %     
 %     params.batch_size = int64(params.T/5);  % batch size
     assert(params.batch_size <= params.T);
@@ -179,7 +191,7 @@ function params = init_parameters()
     %
     params.is_sparse_dict_init = false;
     %
-    params.is_patch_encoding = true;
+    params.is_patch_encoding = false;
     if params.is_patch_encoding
         params.patch_multilayer = true;
     end

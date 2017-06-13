@@ -8,6 +8,7 @@ function obj = initialize_D_A_B(curr_dictionary_sizes, params)
             D_init{curr_k} = sprand(params.n,curr_k, params.nz_in_dict);
         else
             D_init{curr_k} = normalize(rand(params.n,curr_k));
+            D_init{curr_k}
         end
         assert(~nnz(isnan(D_init{curr_k})));
         %
