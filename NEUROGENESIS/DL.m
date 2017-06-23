@@ -169,7 +169,7 @@ function [D,A, B, err,correl_all] = DL(data, D0, params, D_update_method, A, B)
         %         
         fprintf('\nNumber of seconds to update the dictionary was %f.\n', toc);
         %
-        if (strcmp(D_update_method, 'GroupMairal')) || (strcmp(D_update_method, 'SG') && (params.lambda_D ~= 0))
+        if (strcmp(D_update_method, 'GroupMairal')) || ((strcmp(D_update_method, 'SG') && (params.lambda_D ~= 0)))
             [~,ind] = find(sum(abs(D)));
             % active neurons.
             num_non_sparse_dictionary_elements = length(ind);

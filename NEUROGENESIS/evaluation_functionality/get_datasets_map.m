@@ -22,18 +22,36 @@ function [datasets_map] = get_datasets_map(data_set_name, T, dir_path, input_dim
             [train_data, test_data, data0, test_data0, data1, test_data1] = get_large_images(T, dir_path, input_dim);
             datasets_map.data_nst2_train = data1;
             datasets_map.data_nst2_test = test_data1;
+        elseif strcmp(data_set_name, 'large_all_image')
+            [train_data, test_data] = get_all_large_images(T, dir_path, input_dim);
         else
             error('no such data set');
         end
         %
         datasets_map.data_st_train = train_data;
         datasets_map.data_st_test = test_data;
-        datasets_map.data_nst_train = data0;
-        datasets_map.data_nst_test = test_data0;
+        %         
+        if ~strcmp(data_set_name, 'large_all_image')
+            datasets_map.data_nst_train = data0;
+            datasets_map.data_nst_test = test_data0;
+        end
+        %         
         save datasets_map datasets_map;
     else
         load datasets_map;
     end
+end
+
+
+function [all_data_train, all_data_test] = get_all_large_images(T, dir_path, input_dim)
+    n = sqrt(input_dim); clear input_dim;
+    assert(mod(n, 1) == 0);
+    image_size = [n n];
+    %     
+    [all_data] = all_images(T*2, dir_path, image_size);
+    %     
+    all_data_train = all_data(:, 1:2:end);
+    all_data_test = all_data(:, 2:2:end);
 end
 
 

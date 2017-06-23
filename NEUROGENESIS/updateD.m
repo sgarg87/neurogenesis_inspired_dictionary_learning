@@ -20,9 +20,9 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     %
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
-            if params.is_sparse_dictionary
-                warning('Sparse learning of dictionary elements is not implemented for SG method yet');
-            end
+%             if params.is_sparse_dictionary
+%                 warning('Sparse learning of dictionary elements is not implemented for SG method yet');
+%             end
     %         assert(~is_sparse_dictionary);
 
     %%%%%%%%%%%%%%%%%%%%%% this modification  is NOT an SG approach - looks at ALL data
@@ -32,73 +32,143 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
                               % try all data samples seen so far - to optimize
                               % same objective as Mairal
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+            %               
+%             max_num_iter = 100;
             converged = 0;
+            curr_count = 0;
+            %             
             while ~converged
+                curr_count = curr_count + 1;
+                %                 
+                if curr_count > max_num_iter
+                    break;
+                end
+
             %for iter = 1:4
                 Dprev = D;
 
     %max(max(D));
-            % compute the step size eta for gradient step - use 1/L, where L is an upper bound on
-            % the largest eigenvalue
-    %  
-            [U,S,V] = svd(code*code');
-            L = S(1,1)+0.01;
-            eta = 1/L;
-            % gradient step; first index - input dimension, second - dictionary element
-                    % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.     
-                    D = D - eta*(link_func(D*code,params.data_type) - x)*code';
-
-                    if nnz(isinf(D))
-                        display 'infty in D'
-                        pause;
-                    end
-                    if nnz(isnan(D))
-                        display 'NaNs in D'
-                        pause;
-                    end
-
+%     
+% 
+% 
+% Sahil commented the code stochastic rate selection with SVD, too
+% expensive, using an alternative like a constant rate instead.
+%             % compute the step size eta for gradient step - use 1/L, where L is an upper bound on
+%             % the largest eigenvalue
+%             tic;
+%             [U,S,V] = svd(code*code');
+%             L = S(1,1)+0.01;
+%             eta = 1/L;            
+%             toc
+%             eta
+            %  
+            %     
+                eta = params.eta;
+            % 
+            %             
+            % 
+%             % gradient step; first index - input dimension, second - dictionary element
+%                 % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.
+%                 D = D - eta*(link_func(D*code,params.data_type) - x)*code';
+                % 
+                if nnz(isinf(D))
+                    display 'infty in D'
+                    pause;
+                end
+                if nnz(isnan(D))
+                    display 'NaNs in D'
+                    pause;
+                end
+                % 
+%                 if params.is_sparse_dictionary || (params.lambda_D ~= 0)
                     for j=1:k
-                        for jj = 1:n  % first, soft thresholding of individual edges 
-                            if ~D(jj,j) % zero element  - skip it
-                                continue;
-                            end
-                            coef = 1 - params.mu/abs(D(jj,j));%  mu*abs(D(jj,j)); - does not look right, must be / not *
-                            if coef < 0 
+                        %                         
+                        % gradient step; first index - input dimension, second - dictionary element
+                        % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.
+                        % todo: make this step more efficient by computing the change only for the current block (jth dictionary element)
+                        D_change = (link_func(D*code,params.data_type) - x)*code';
+                        u = D(:, j) - eta*D_change(:, j);
+                        % 
+%                         u = D(:, j);
+                        %                         
+                        if params.is_sparse_dictionary
+                            u = sparsify_dictionary_element(u, params);
+                            assert(~nnz(isnan(u)));
+                        end
+                        %
+                        if params.lambda_D ~= 0
+                            uj_norm = sqrt((u')*u);
+                            if uj_norm == 0
                                 coef = 0;
+                            else
+                                coef = (1-params.lambda_D/uj_norm);
+                                assert(~isnan(coef));
+                                if coef < 0
+                                    coef = 0;
+                                end  
                             end
-                            D(jj,j) = D(jj,j)*coef;
+                            %                
+                            u = coef*u;
+                            %                         
+                            if nnz(isnan(u))
+                                display 'NaN in D';
+                            end
+                            clear uj_norm;
                         end
-                        if ~nnz(D(:,j))  % all-zeros dictionary element - skip it 
-                            continue;
-                        end
-    %                     
-    %                     if ~nnz(D(:,j))
-    %                         display 'all zeros dictionary element'
-    %                         pause;
-    %                     end
-                        coef = 1-params.lambda_D/sqrt(D(:,j)'*D(:,j));
-                        %                     
-                        if coef < 0
-                            coef = 0;
-                        end
-                        d_old = D(:,j);
-
-                        D(:,j) = D(:,j)*coef;
-
-                        if ~nnz(sum(abs(D)))
-                            D(:,j) = d_old;
-                        end
-               %         norm(D(:,j))
-
-
-                        %A(:,j) = A(:,j)*coef; %not sure we need this here - SG does not use A and B!
-                        %B(:,j) = B(:,j)*coef;
+                        %
+                        D(:,j) = u*(1/max(1,sqrt(u'*u)));
                     end
+%                 end
+% 
+% 
+%  Sahil commented the code block, dealing with sparsity of elements and
+%  killing
+%                     for j=1:k
+%                         for jj = 1:n  % first, soft thresholding of individual edges 
+%                             if ~D(jj,j) % zero element  - skip it
+%                                 continue;
+%                             end
+%                             coef = 1 - params.mu/abs(D(jj,j));%  mu*abs(D(jj,j)); - does not look right, must be / not *
+%                             if coef < 0 
+%                                 coef = 0;
+%                             end
+%                             D(jj,j) = D(jj,j)*coef;
+%                         end
+%                         if ~nnz(D(:,j))  % all-zeros dictionary element - skip it 
+%                             continue;
+%                         end
+%     %                     
+%     %                     if ~nnz(D(:,j))
+%     %                         display 'all zeros dictionary element'
+%     %                         pause;
+%     %                     end
+%                         coef = 1-params.lambda_D/sqrt(D(:,j)'*D(:,j));
+%                         %                     
+%                         if coef < 0
+%                             coef = 0;
+%                         end
+%                         d_old = D(:,j);
+% 
+%                         D(:,j) = D(:,j)*coef;
+% 
+%                         if ~nnz(sum(abs(D)))
+%                             D(:,j) = d_old;
+%                         end
+%                %         norm(D(:,j))
+% 
+% 
+%                         %A(:,j) = A(:,j)*coef; %not sure we need this here - SG does not use A and B!
+%                         %B(:,j) = B(:,j)*coef;
+%                     end
 
-                    if max(max(abs(Dprev-D))) < params.epsilon
+                    max_diff = max(max(abs(Dprev-D)));
+                    fprintf('\nmax_diff: %f', max_diff);
+                    if max_diff < params.epsilon
                         converged = 1;
-                    end   
+                    end 
+%                     if max(max(abs(Dprev-D))) < params.epsilon
+%                         converged = 1;
+%                     end   
                     % 
                     %  let's normalize the dictionary - EM diverges, not a good idea
                     %%D = normalize(D);

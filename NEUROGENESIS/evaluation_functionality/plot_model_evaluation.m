@@ -115,6 +115,7 @@ function plot_pearson_correlation(model, dir_path, prefix)
     legend(legend_list);
     legend('location','SouthEast');
     %
+    %     
     set(gca, 'FontSize', 20);
     hline = findobj(gcf, 'type', 'line');
     set(hline,'LineWidth', 2);
@@ -126,7 +127,7 @@ function plot_pearson_correlation(model, dir_path, prefix)
     ylabel('Pearson correlation (true, predicted)');
 %     
     xlim([0,inf]);
-%     ylim([0,1]);
+    ylim([0,1]);
 %     
     curr_path = strcat(dir_path, sprintf('Figures/%s_pearson_correlation_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
@@ -221,7 +222,7 @@ function plot_spearman_correlation(model, dir_path, prefix)
     xlabel('Final dictionary size k');
     ylabel('Spearman correlation (true, predicted)');
     xlim([0,inf]);
-%     ylim([0,1]);    
+    ylim([0,1]);    
     curr_path = strcat(dir_path, sprintf('Figures/%s_spearman_correlation_n%d_T%d_new%d_%s_%s__sparsecodes_%d__dictionarysparse_%d_%d', prefix, params.n,params.T,params.new_elements,params.adapt, params.data_set_name, floor(params.nonzero_frac*params.n), params.is_sparse_dictionary, floor(params.nz_in_dict*params.n)));
     saveas(gcf,curr_path,'fig');
     saveas(gcf,curr_path,'png');

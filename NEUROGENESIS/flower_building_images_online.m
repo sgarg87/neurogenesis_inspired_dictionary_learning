@@ -13,7 +13,8 @@ function [flowers_data, animals_data, oxford_data] = flower_building_images_onli
         %     flowers_data = add_noise(flowers_data);
             save flowers_data flowers_data;
         %
-        animals_dir_path = strcat(dir_path, '../../data/images_dogs_cats/');
+%         animals_dir_path = strcat(dir_path, '../../data/images_dogs_cats/');
+        animals_dir_path = strcat(dir_path, '../../all_images_mixed/');
         animal_image_files = dir(strcat(animals_dir_path, '*.jpg'));
         animal_image_files = animal_image_files(randperm(length(animal_image_files)));
         animal_image_files = animal_image_files(1:num_data_per_label);

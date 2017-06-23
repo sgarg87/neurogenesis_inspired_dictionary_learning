@@ -68,7 +68,7 @@ function evaluate_online(is_hpcc, curr_core)
     %     
     model_path = 'model';
     if is_hpcc && (curr_core > 0)
-        model_path = strcat(model_path, num2str(curr_core));        
+        model_path = strcat(model_path, num2str(curr_core));
     end
     model_path = strcat(dir_path, model_path);
     save(model_path, 'model');
