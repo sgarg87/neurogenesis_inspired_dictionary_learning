@@ -63,7 +63,7 @@ function params = init_parameters()
     params.data_set_name = 'large_image';  % patches vs images
 %     params.data_set_name = 'large_all_image';  % patches vs images
 %     
-    is_small_size = false;
+    is_small_size = true;
 %     
     if is_small_size
 %         params.n = 64;  % input size
@@ -89,7 +89,7 @@ function params = init_parameters()
     params.is_sparse_dictionary = true; % sparse columns (elements) in dictionary
     params.dictionary_element_sparse_algo = 'proximal';
 %     
-    params.nz_in_dict = 0.00125; % number of nonzeros in each dictionary element
+    params.nz_in_dict = 0.005; % number of nonzeros in each dictionary element
 %     params.nz_in_dict = 0.010; % number of nonzeros in each dictionary element
 %     
 %     params.dict_element_lam = 1e0;
@@ -101,11 +101,11 @@ function params = init_parameters()
     elseif params.n == 1024
         % for small images 32x32
 %         params.lambda_D = 3e-2; % group sparsity
-        params.lambda_D = 1e-3; % group sparsity
+        params.lambda_D = 1e-2; % group sparsity
     %     params.lambda_D = 3e-3; % group sparsity
     elseif params.n == 256
         % for small images 10x10
-        params.lambda_D = 1e-2; % group sparsity
+        params.lambda_D = 1e-3; % group sparsity
     elseif params.n == 64
         % for small images 10x10
         params.lambda_D = 1e-2; % group sparsity
@@ -208,4 +208,9 @@ function params = init_parameters()
     params.is_replay = false;
     %
     params.is_stationary_only = false;
+    %     
+    % this is gradient method basically, rather than the stochasticity
+    params.is_sg_memory_based = true;
+    params.is_sg_newton = true;
+    %
 end
