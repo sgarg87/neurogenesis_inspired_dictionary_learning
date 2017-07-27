@@ -79,8 +79,8 @@ function params = init_parameters()
     params.T = 1900;  % total number of iterations/data samples
 %     params.T = 190;  % total number of iterations/data samples
 % 
-%     params.coding_sparse_algo = 'proximal';
-    params.coding_sparse_algo = 'lars';
+    params.coding_sparse_algo = 'proximal';
+%     params.coding_sparse_algo = 'lars';
 %     
 %     params.nonzero_frac = 0.0025;
 %     params.nonzero_frac = 0.0500;

@@ -165,8 +165,15 @@ function [dict_model] = get_dictionary_codes(X, data_set_name)
         X_dict_lrn = datasample(X, params.T, 2, 'Replace', false);
         %     
         if params.is_mairal
+%             [code, ~, ~] = sparse_coding(X_dict_lrn, dict_model.D, params);
+%             % change the code if supervised (note only some of the codes should be changed as arm is played only for some of the rounds)            
+%             dict_model.A = dict_model.A + code*code';
+%             dict_model.B = dict_model.B + X_dict_lrn*code';
+%             dict_model.D = updateD(dict_model.D, code, X_dict_lrn, params, 'Mairal', dict_model.A, dict_model.B);
+            %             
             [dict_model.D, dict_model.A, dict_model.B, ~, ~] = mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
         else
+%             error('Supervised not implemented');
             [dict_model.D, dict_model.A, dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, params, dict_model.A, dict_model.B);
         end
         %
@@ -343,7 +350,13 @@ function [dict_model] = adapt_dict_online(X, Y, dict_model)
             % 
             %
             if dict_model.params.is_mairal
-                [dict_model.D, dict_model.A, dict_model.B, ~, ~] = mairal(X_dict_lrn, dict_model.D, dict_model.params, dict_model.A, dict_model.B);
+                [code, ~, ~] = sparse_coding(X_dict_lrn, dict_model.D, params);
+                % change the code if supervised (note only some of the codes should be changed as arm is played only for some of the rounds)            
+                dict_model.A = dict_model.A + code*code';
+                dict_model.B = dict_model.B + X_dict_lrn*code';
+                dict_model.D = updateD(dict_model.D, code, X_dict_lrn, params, 'Mairal', dict_model.A, dict_model.B);
+                %                 
+%                 [dict_model.D, dict_model.A, dict_model.B, ~, ~] = mairal(X_dict_lrn, dict_model.D, dict_model.params, dict_model.A, dict_model.B);
             else
                 [dict_model.D, dict_model.A, dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, dict_model.D, dict_model.params, dict_model.A, dict_model.B);
             end
@@ -399,16 +412,22 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
 % 
                 fprintf('\n *********************%d***********************', curr_data_idx);
                 %                 
-                X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
+                X_dict_lrn = X(curr_data_idx-model.dict_model.params.online_dict_update_batch_size+1:curr_data_idx, :)';
                 %
-                model.dict_model.params.batch_size = model.online_dict_update_batch_size;
-                model.dict_model.params.T = model.online_dict_update_batch_size;
+                model.dict_model.params.batch_size = model.dict_model.params.online_dict_update_batch_size;
+                model.dict_model.params.T = model.dict_model.params.online_dict_update_batch_size;
                 model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
                 % 
                 %
                 % todo: modify the functions, with supervision (pass rewards to these functions, and then recompute codes within those functions)
                 if model.dict_model.params.is_mairal
-                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                    [code, ~, ~] = sparse_coding(X_dict_lrn, model.dict_model.D, model.dict_model.params);
+                    % change the code if supervised (note only some of the codes should be changed as arm is played only for some of the rounds)            
+                    model.dict_model.A = model.dict_model.A + code*code';
+                    model.dict_model.B = model.dict_model.B + X_dict_lrn*code';
+                    model.dict_model.D = updateD(model.dict_model.D, code, X_dict_lrn, model.dict_model.params, 'Mairal', model.dict_model.A, model.dict_model.B);
+                    %                     
+%                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
                 else
                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
                 end

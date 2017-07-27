@@ -6,7 +6,7 @@ clear;
 % 
 % 
 % 
-num_trials = 25;
+num_trials = 5;
 % 
 % 
 % CNAE
@@ -93,11 +93,11 @@ num_trials = 25;
 % 
 % 
 % % Warfarin dose data
-% rng(0);
-% [model, ~] = multi_armed_bandit(false, 10, num_trials, false, true, false);
-% save model_warfarin model;
-% 
 rng(0);
-[model, ~] = multi_armed_bandit(false, 10, num_trials, true, true, false);
-save model_warfarin_dict model;
+[model, ~] = multi_armed_bandit(false, 10, num_trials, false, true, false);
+save model_warfarin model;
+% 
+% rng(0);
+% [model, ~] = multi_armed_bandit(false, 10, num_trials, true, true, false);
+% save model_warfarin_dict model;
 
