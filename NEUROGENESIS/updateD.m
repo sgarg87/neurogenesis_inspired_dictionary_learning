@@ -20,94 +20,131 @@ function  [D] = updateD(D_old,code,x,params,D_update_method,A,B)
     %
     switch D_update_method
         case 'SG' %stochastic gradient with thresholding, i.e. proximal method
-            %               
-            converged = 0;
-            curr_count = 0;
             %
-            if params.is_sg_newton
-                tic;
-                A_inv = inv(A);
-                fprintf('Time to inverse was %f.\n', toc);
-                clear start_inv_time;
-            end
-            %             
-            while ~converged
-                curr_count = curr_count + 1;
+            if params.is_zero_gradient
+                D = B*inv(A);
                 %                 
-                if curr_count > max_num_iter
-                    break;
-                end
-                Dprev = D;
-                %     
-                % 
-                if params.is_sg_newton
-                    eta = 1;
-                else
-                    eta = params.eta;
-                end
-                % 
-                %                 
-                if nnz(isinf(D))
-                    display 'infty in D'
-                    pause;
-                end
-                if nnz(isnan(D))
-                    display 'NaNs in D'
-                    pause;
-                end
-                % 
-                    for j=1:k
-                        %                         
-                        % gradient step; first index - input dimension, second - dictionary element
-                        % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.
-                        % todo: make this step more efficient by computing the change only for the current block (jth dictionary element)
-                        %                         
-                        if params.is_sg_memory_based
-                            D_change = (D*A) - B;
-                            if params.is_sg_newton
-                                D_change = D_change*A_inv;
-                            end
-                        else
-                            D_change = (link_func(D*code,params.data_type) - x)*code';
-                        end
-                        %                         
-                        % 
-                        u = D(:, j) - eta*D_change(:, j);
-                        % 
-                        %                         
-                        if params.is_sparse_dictionary
-                            u = sparsify_dictionary_element(u, params);
-                            assert(~nnz(isnan(u)));
-                        end
-                        %
-                        if params.lambda_D ~= 0
-                            uj_norm = sqrt((u')*u);
-                            if uj_norm == 0
-                                coef = 0;
-                            else
-                                coef = (1-params.lambda_D/uj_norm);
-                                assert(~isnan(coef));
-                                if coef < 0
-                                    coef = 0;
-                                end  
-                            end
-                            %                
-                            u = coef*u;
-                            %                         
-                            if nnz(isnan(u))
-                                display 'NaN in D';
-                            end
-                            clear uj_norm;
-                        end
-                        %
-                        D(:,j) = u*(1/max(1,sqrt(u'*u)));
+                for j=1:k
+                    %                         
+                    u = D(:, j);
+                    %                         
+                    if params.is_sparse_dictionary
+                        u = sparsify_dictionary_element(u, params);
+                        assert(~nnz(isnan(u)));
                     end
                     %
-                    max_diff = max(max(abs(Dprev-D)));
-                    fprintf('\nmax_diff: %f', max_diff);
-                    if max_diff < params.epsilon
-                        converged = 1;
-                    end 
+                    if params.lambda_D ~= 0
+                        uj_norm = sqrt((u')*u);
+                        if uj_norm == 0
+                            coef = 0;
+                        else
+                            coef = (1-params.lambda_D/uj_norm);
+                            assert(~isnan(coef));
+                            if coef < 0
+                                coef = 0;
+                            end  
+                        end
+                        %                
+                        u = coef*u;
+                        %                         
+                        if nnz(isnan(u))
+                            display 'NaN in D';
+                        end
+                        clear uj_norm;
+                    end
+                    %
+                    D(:,j) = u*(1/max(1,sqrt(u'*u)));
+                end
+            else
+                %             
+                converged = 0;
+                curr_count = 0;
+                %
+                if params.is_sg_newton
+                    tic;
+                    A_inv = inv(A);
+                    fprintf('Time to inverse was %f.\n', toc);
+                    clear start_inv_time;
+                end
+                %             
+                while ~converged
+                    curr_count = curr_count + 1;
+                    %                 
+                    if curr_count > max_num_iter
+                        break;
+                    end
+                    Dprev = D;
+                    %     
+                    % 
+                    if params.is_sg_newton
+                        eta = 1;
+                    else
+                        eta = params.eta;
+                    end
+                    % 
+                    %                 
+                    if nnz(isinf(D))
+                        display 'infty in D'
+                        pause;
+                    end
+                    if nnz(isnan(D))
+                        display 'NaNs in D'
+                        pause;
+                    end
+                    % 
+                        for j=1:k
+                            %                         
+                            % gradient step; first index - input dimension, second - dictionary element
+                            % sahil: "link_func(D*code,data_type) - x" is negative of error we make in inferring x.
+                            % todo: make this step more efficient by computing the change only for the current block (jth dictionary element)
+                            %                         
+                            if params.is_sg_memory_based
+                                D_change = (D*A) - B;
+                                if params.is_sg_newton
+                                    D_change = D_change*A_inv;
+                                end
+                            else
+                                D_change = (link_func(D*code,params.data_type) - x)*code';
+                            end
+                            %                         
+                            % 
+                            u = D(:, j) - eta*D_change(:, j);
+                            % 
+                            %                         
+                            if params.is_sparse_dictionary
+                                u = sparsify_dictionary_element(u, params);
+                                assert(~nnz(isnan(u)));
+                            end
+                            %
+                            if params.lambda_D ~= 0
+                                uj_norm = sqrt((u')*u);
+                                if uj_norm == 0
+                                    coef = 0;
+                                else
+                                    coef = (1-params.lambda_D/uj_norm);
+                                    assert(~isnan(coef));
+                                    if coef < 0
+                                        coef = 0;
+                                    end  
+                                end
+                                %                
+                                u = coef*u;
+                                %                         
+                                if nnz(isnan(u))
+                                    display 'NaN in D';
+                                end
+                                clear uj_norm;
+                            end
+                            %
+                            D(:,j) = u*(1/max(1,sqrt(u'*u)));
+                        end
+                        %
+                        max_diff = max(max(abs(Dprev-D)));
+                        fprintf('\nmax_diff: %f', max_diff);
+                        if max_diff < params.epsilon
+                            converged = 1;
+                        end 
+                end
             end
         case 'Mairal'
             converged = 0;

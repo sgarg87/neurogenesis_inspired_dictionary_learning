@@ -12,11 +12,11 @@ function [dictionary_sizes] = get_dictionary_size_list_fr_algorithms(algorithms)
 % 100 150
 % 
 % 
-%     global_size = [25 50 100 150 250 350 500 1000 1500 2000];
+    global_size = [25 50 100 150 250 350 500 750 1000];
 % 
 %     global_size = [25 100 250];
 % 
-    global_size = [25 50 100 150 250 350 500];
+%     global_size = [25 50 100 150 250 350 500];
 % 
 %     global_size = [25 100 500];
     %

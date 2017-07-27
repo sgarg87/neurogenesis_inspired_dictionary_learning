@@ -15,13 +15,15 @@ function [model, loss] = multi_armed_bandit(is_stationary, data_set_name, num_cy
     if is_dictionary_coding
 %         
 % 
-        assert (data_set_name == 10);
-        load model_warfarin_dict_reconstructed_100.mat;
-        dict_model = model.dict_model;
-        clear model;
+% %         assert (data_set_name == 10);
+% %         load model_warfarin_dict_reconstructed_100.mat;
+% %         dict_model = model.dict_model;
+% %         clear model;
 % 
 % 
-%         dict_model = get_dictionary_codes(X, data_set_name);
+        dict_model = get_dictionary_codes(X, data_set_name);
+%         
+        % adaptation should happen along with bandit in supervised dictionary learning case
 %         dict_model = adapt_dict_online(X, Y, dict_model);
 % 
 % 
@@ -353,6 +355,8 @@ function [dict_model] = adapt_dict_online(X, Y, dict_model)
         %         
         % 
     end
+    %     
+    %     
 end
 
 
@@ -386,26 +390,34 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
         if model.is_dictionary_coding
             %             
             if (mod(curr_data_idx, model.dict_model.params.online_dict_update_batch_size) == 0)
-                D = model.dict_model.D_adaptedversions{curr_data_idx};
-%                 fprintf('\n *********************%d***********************', curr_data_idx);
-%                 %                 
-%                 X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
-%                 %
-%                 model.dict_model.params.batch_size = model.online_dict_update_batch_size;
-%                 model.dict_model.params.T = model.online_dict_update_batch_size;
-%                 model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
-%                 % 
-%                 %
-%                 if model.dict_model.params.is_mairal
-%                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
-%                 else
-%                     [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
-%                 end
-%                 %                 
-%                 clear X_dict_lrn;
+%                 
+% 
+% commented code line as we can not precompute adapted dictionary in
+% supervised settings
+%                 D = model.dict_model.D_adaptedversions{curr_data_idx};
+%                 
+% 
+                fprintf('\n *********************%d***********************', curr_data_idx);
+                %                 
+                X_dict_lrn = X(curr_data_idx-model.online_dict_update_batch_size+1:curr_data_idx, :)';
+                %
+                model.dict_model.params.batch_size = model.online_dict_update_batch_size;
+                model.dict_model.params.T = model.online_dict_update_batch_size;
+                model.dict_model.params.is_reinitialize_dictionary_fixed_size = false;
+                % 
+                %
+                % todo: modify the functions, with supervision (pass rewards to these functions, and then recompute codes within those functions)
+                if model.dict_model.params.is_mairal
+                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                else
+                    [model.dict_model.D, model.dict_model.A, model.dict_model.B, ~, ~] = neurogen_group_mairal(X_dict_lrn, model.dict_model.D, model.dict_model.params, model.dict_model.A, model.dict_model.B);
+                end
+                %                 
+                clear X_dict_lrn;
+                %                 
+                % 
             end
         end
-        %         
         %
         %         
         if model.is_semi_supervised && (mod(curr_data_idx, model.semisupervision_factor) ~= 1)
@@ -437,6 +449,8 @@ function [model, loss, correct_arms, loss_arms] = adapt_model_online(X, Y, model
             end
             error
             correlation
+            % 
+            % 
         end
         %         
         reward_inference = zeros(model.num_arms, 1);

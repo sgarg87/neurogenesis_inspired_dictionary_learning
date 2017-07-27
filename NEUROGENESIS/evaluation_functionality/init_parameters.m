@@ -78,7 +78,9 @@ function params = init_parameters()
 %     
     params.T = 1900;  % total number of iterations/data samples
 %     params.T = 190;  % total number of iterations/data samples
-    params.coding_sparse_algo = 'proximal';
+% 
+%     params.coding_sparse_algo = 'proximal';
+    params.coding_sparse_algo = 'lars';
 %     
 %     params.nonzero_frac = 0.0025;
 %     params.nonzero_frac = 0.0500;
@@ -170,7 +172,8 @@ function params = init_parameters()
     params.noise = 5;  % not used right now, only in simulated data
     %     
     % sparse codings
-    params.lambda2_C = 0.00001; %0;  % LASSO
+%     params.lambda2_C = 0.00001; %0;  % LASSO
+    params.lambda2_C = 0.0; %0;  % LASSO
     %
     % conditional neurogenesis related config.
     params.is_conditional_neurogenesis = true;
@@ -212,5 +215,7 @@ function params = init_parameters()
     % this is gradient method basically, rather than the stochasticity
     params.is_sg_memory_based = true;
     params.is_sg_newton = true;
+    %     
+    params.is_zero_gradient = true;
     %
 end
